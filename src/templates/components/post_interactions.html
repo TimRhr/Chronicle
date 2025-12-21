@@ -1,0 +1,78 @@
+<!-- Post Interactions: Reactions, Comments, Bookmarks -->
+
+{% macro reactions_bar(post, theme_color, is_owner=true) %}
+<div class="post-reactions flex flex-wrap items-center gap-2 sm:gap-4 pt-3 border-t border-light-border dark:border-dark-border mt-3 overflow-visible" data-post-id="{{ post.id }}" data-is-owner="{{ 'true' if is_owner else 'false' }}">
+    {% if is_owner %}
+    <!-- Owner view: Summary only with hover tooltips -->
+    <div class="reactions-summary flex items-center gap-2 text-sm text-light-text-muted dark:text-dark-text-muted">
+    </div>
+    {% else %}
+    <!-- Visitor view: Reaction container -->
+    <div class="reactions-container relative flex-shrink-0">
+        <!-- User's current reaction (shown when they have reacted) -->
+        <div class="user-reaction hidden">
+            <button type="button" class="user-reaction-btn p-1 sm:p-1.5 rounded-md bg-light-bg dark:bg-dark-bg transition-all duration-300 text-base sm:text-lg transform hover:scale-110" title="{{ _('Click to change') }}">
+                <span class="user-emoji"></span>
+            </button>
+        </div>
+        <!-- All reaction options (shown when no reaction or changing) -->
+        <div class="reaction-options flex items-center gap-0.5 sm:gap-1 transition-all duration-300">
+            {% for emoji in ['👍', '❤️', '😂', '😮', '😢', '🎉'] %}
+            <button type="button" class="reaction-btn p-1 sm:p-1.5 rounded-md hover:bg-light-bg dark:hover:bg-dark-bg transition-all duration-200 text-base sm:text-lg hover:scale-110" 
+                    data-emoji="{{ emoji }}" title="{{ _('React') }}">
+                {{ emoji }}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+    <!-- Reactions summary with tooltips -->
+    <div class="reactions-display flex items-center gap-1 text-sm flex-shrink-0">
+    </div>
+    {% endif %}
+    <div class="flex-1 min-w-0"></div>
+    <div class="flex items-center gap-1 flex-shrink-0">
+        <button type="button" class="bookmark-btn p-1.5 rounded-md hover:bg-light-bg dark:hover:bg-dark-bg transition-colors" title="{{ _('Bookmark') }}">
+            <svg class="w-5 h-5 bookmark-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+        </button>
+        <button type="button" class="comment-toggle-btn p-1.5 rounded-md hover:bg-light-bg dark:hover:bg-dark-bg transition-colors flex items-center gap-1" title="{{ _('Comments') }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+            <span class="comment-count text-xs text-light-text-muted dark:text-dark-text-muted">0</span>
+        </button>
+    </div>
+</div>
+
+<!-- Comments section (hidden by default) -->
+<div class="comments-section hidden mt-4 pt-4 border-t border-light-border dark:border-dark-border">
+    <div class="comments-list space-y-3 mb-4"></div>
+    <form class="comment-form flex gap-2">
+        <input type="text" class="comment-input flex-1 min-w-0 px-3 py-2 text-sm rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg focus:outline-none focus:ring-2 focus:ring-brand-teal" placeholder="{{ _('Write a comment...') }}">
+        <button type="submit" class="flex-shrink-0 p-2 sm:px-4 sm:py-2 text-sm font-medium text-white rounded-md" style="background-color: {{ theme_color or '#4da9a4' }}" title="{{ _('Send') }}">
+            <svg class="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+            <span class="hidden sm:inline">{{ _('Send') }}</span>
+        </button>
+    </form>
+</div>
+{% endmacro %}
+
+{% macro render_comment(comment, theme_color, depth=0) %}
+<div class="comment {% if depth > 0 %}ml-6 pl-3 border-l-2{% endif %}" style="{% if depth > 0 %}border-color: {{ theme_color or '#4da9a4' }}20{% endif %}" data-comment-id="{{ comment.id }}">
+    <div class="flex items-start gap-2">
+        {% if comment.author.avatar_url %}
+        <img src="{{ comment.author.avatar_url }}" alt="Avatar" class="w-6 h-6 rounded-full">
+        {% else %}
+        <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background-color: {{ comment.author.theme_color or '#4da9a4' }}">
+            {{ (comment.author.display_name or comment.author.username)[0]|upper }}
+        </div>
+        {% endif %}
+        <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+                <span class="text-sm font-medium">{{ comment.author.display_name or comment.author.username }}</span>
+                <span class="text-xs text-light-text-muted dark:text-dark-text-muted">{{ comment.created_at }}</span>
+            </div>
+            <p class="text-sm text-light-text-secondary dark:text-dark-text-secondary mt-0.5">{{ comment.content }}</p>
+            <button type="button" class="reply-btn text-xs mt-1 hover:underline" style="color: {{ theme_color or '#4da9a4' }}">{{ _('Reply') }}</button>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+

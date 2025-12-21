@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Login - Chronicle</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0f0f1a 100%);
+            min-height: 100vh;
+        }
+        .cyber-grid {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(77, 169, 164, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(77, 169, 164, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+        }
+        .glow-box {
+            box-shadow: 
+                0 0 20px rgba(77, 169, 164, 0.15),
+                0 0 40px rgba(77, 169, 164, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(77, 169, 164, 0.3);
+        }
+        .glow-input:focus {
+            box-shadow: 0 0 0 2px rgba(77, 169, 164, 0.5), 0 0 20px rgba(77, 169, 164, 0.2);
+        }
+        .cyber-btn {
+            background: linear-gradient(135deg, #4da9a4 0%, #3d8b87 100%);
+            box-shadow: 0 4px 15px rgba(77, 169, 164, 0.4);
+            transition: all 0.3s ease;
+        }
+        .cyber-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(77, 169, 164, 0.6);
+        }
+        .pulse-ring {
+            animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            50% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.7; }
+        }
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(77, 169, 164, 0.5), transparent);
+            animation: scan 3s linear infinite;
+        }
+        @keyframes scan {
+            0% { top: 0; opacity: 0; }
+            50% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+    <div class="cyber-grid"></div>
+    
+    <div class="relative w-full max-w-md">
+        <!-- Decorative elements -->
+        <div class="absolute -top-20 -left-20 w-40 h-40 bg-brand-teal/10 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-20 -right-20 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl"></div>
+        
+        <div class="glow-box rounded-2xl bg-dark-surface/80 backdrop-blur-xl p-8 relative overflow-hidden">
+            <div class="scan-line"></div>
+            
+            <!-- Logo/Header -->
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-brand-teal to-brand-blue mb-4 pulse-ring">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold text-white mb-2">Analytics Dashboard</h1>
+                <p class="text-dark-text-muted text-sm font-mono">CHRONICLE CONTROL CENTER</p>
+            </div>
+            
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="mb-6 p-3 rounded-lg text-sm {% if category == 'error' %}bg-red-500/20 text-red-400 border border-red-500/30{% else %}bg-brand-teal/20 text-brand-mint border border-brand-teal/30{% endif %}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- Login Form -->
+            <form method="POST" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div>
+                    <label class="block text-xs font-mono text-dark-text-muted mb-2 uppercase tracking-wider">Admin Username</label>
+                    <input type="text" name="username" required autocomplete="username"
+                           class="glow-input w-full px-4 py-3 rounded-lg border border-dark-border placeholder-gray-500 focus:outline-none focus:border-brand-teal transition-all font-mono"
+                           style="background-color: #1a1a2e; color: #e0e0e0;"
+                           placeholder="Enter username">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-mono text-dark-text-muted mb-2 uppercase tracking-wider">Password</label>
+                    <input type="password" name="password" required autocomplete="current-password"
+                           class="glow-input w-full px-4 py-3 rounded-lg border border-dark-border placeholder-gray-500 focus:outline-none focus:border-brand-teal transition-all font-mono"
+                           style="background-color: #1a1a2e; color: #e0e0e0;"
+                           placeholder="••••••••••••">
+                </div>
+                
+                <button type="submit" class="cyber-btn w-full py-3 rounded-lg text-white font-semibold uppercase tracking-wider">
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                        </svg>
+                        Authenticate
+                    </span>
+                </button>
+            </form>
+            
+            <!-- Footer -->
+            <div class="mt-8 pt-6 border-t border-dark-border text-center">
+                <a href="{{ url_for('index') }}" class="text-sm text-dark-text-muted hover:text-brand-teal transition-colors">
+                    ← Zurück zu Chronicle
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

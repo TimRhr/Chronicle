@@ -1,0 +1,86 @@
+<!-- Alert Modal Component -->
+<div id="alert-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" id="alert-modal-backdrop"></div>
+    <div class="relative z-10 bg-light-surface dark:bg-dark-surface rounded-lg shadow-2xl border border-light-border dark:border-dark-border max-w-md w-full mx-4 p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div id="alert-modal-icon" class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+            <h3 id="alert-modal-title" class="font-heading text-lg font-bold">Hinweis</h3>
+        </div>
+        <p id="alert-modal-message" class="text-light-text-secondary dark:text-dark-text-secondary mb-6"></p>
+        <div class="flex justify-end">
+            <button type="button" id="alert-modal-close" class="px-4 py-2 text-sm font-medium text-white bg-brand-teal rounded-md hover:bg-brand-blue transition-colors">
+                OK
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Alert Modal Functions
+    window.alertModal = {
+        show: function(message, options = {}) {
+            const modal = document.getElementById('alert-modal');
+            const title = document.getElementById('alert-modal-title');
+            const messageEl = document.getElementById('alert-modal-message');
+            const icon = document.getElementById('alert-modal-icon');
+            const closeBtn = document.getElementById('alert-modal-close');
+            
+            title.textContent = options.title || 'Hinweis';
+            messageEl.textContent = message;
+            
+            // Set icon style based on type
+            if (options.type === 'success') {
+                icon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center';
+                icon.innerHTML = '<svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+            } else if (options.type === 'warning') {
+                icon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center';
+                icon.innerHTML = '<svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>';
+            } else {
+                icon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center';
+                icon.innerHTML = '<svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>';
+            }
+            
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            const appContent = document.getElementById('app-content');
+            if (appContent) {
+                appContent.style.filter = 'blur(4px)';
+                appContent.style.pointerEvents = 'none';
+            }
+        },
+        
+        hide: function() {
+            const modal = document.getElementById('alert-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+            
+            const appContent = document.getElementById('app-content');
+            if (appContent) {
+                appContent.style.filter = '';
+                appContent.style.pointerEvents = '';
+            }
+        }
+    };
+
+    document.getElementById('alert-modal-close').addEventListener('click', function() {
+        window.alertModal.hide();
+    });
+    
+    document.getElementById('alert-modal-backdrop').addEventListener('click', function() {
+        window.alertModal.hide();
+    });
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !document.getElementById('alert-modal').classList.contains('hidden')) {
+            window.alertModal.hide();
+        }
+        if (e.key === 'Enter' && !document.getElementById('alert-modal').classList.contains('hidden')) {
+            window.alertModal.hide();
+        }
+    });
+</script>

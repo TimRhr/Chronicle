@@ -1,0 +1,495 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ group.name }} - {{ _('Settings') }} - Chronicle{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+    <div class="mb-6">
+        <a href="{{ url_for('social.group_detail', slug=group.slug) }}" class="text-brand-teal hover:underline flex items-center gap-1 text-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            {{ _('Back to group') }}
+        </a>
+    </div>
+    
+    <h1 class="text-2xl font-bold text-light-text dark:text-dark-text mb-6">{{ _('Group settings') }}</h1>
+    
+    <!-- Group Settings Form -->
+    <form method="POST" enctype="multipart/form-data" class="glass-card p-6 rounded-lg space-y-4 mb-6">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <!-- Cover Image -->
+        <div>
+            <label class="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                {{ _('Cover image') }}
+            </label>
+            {% if group.cover_image_url %}
+            <div class="mb-3 relative">
+                <img src="{{ group.cover_image_url }}" alt="Cover" class="w-full h-32 object-cover rounded-lg">
+                <label class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity rounded-lg cursor-pointer">
+                    <span class="text-white text-sm font-medium">Ändern</span>
+                    <input type="file" name="cover_image" accept="image/*" class="hidden" onchange="this.form.submit()">
+                </label>
+                <button type="button" onclick="document.getElementById('remove-cover').value='1'; this.closest('form').submit();" 
+                    class="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors" title="Cover entfernen">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <input type="hidden" name="remove_cover" id="remove-cover" value="0">
+            {% else %}
+            <div id="cover-upload-container">
+                <label id="cover-upload-label" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-light-border dark:border-dark-border rounded-lg cursor-pointer hover:border-brand-teal transition-colors">
+                    <svg class="w-8 h-8 text-light-text-muted dark:text-dark-text-muted mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <span class="text-sm text-light-text-muted dark:text-dark-text-muted">{{ _('Upload cover image') }}</span>
+                    <input type="file" name="cover_image" id="cover-input" accept="image/*" class="hidden">
+                </label>
+                <div id="cover-preview" class="hidden relative">
+                    <img id="cover-preview-img" src="" alt="Vorschau" class="w-full h-32 object-cover rounded-lg">
+                    <button type="button" id="cover-preview-remove" class="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors" title="Entfernen">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Group Icon/Avatar -->
+        <div>
+            <label class="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                {{ _('Group icon') }}
+            </label>
+            <div class="flex items-center gap-4">
+                <!-- Current Icon or Default -->
+                <div id="icon-current" class="{% if not group.icon_url %}hidden{% endif %}">
+                    <img id="icon-current-img" src="{{ group.icon_url or '' }}" alt="Icon" class="w-16 h-16 rounded-xl object-cover">
+                </div>
+                <div id="icon-default" class="w-16 h-16 rounded-xl flex items-center justify-center text-white text-xl {% if group.icon_url %}hidden{% endif %}" style="background-color: {{ group.color }}">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
+                <!-- Preview for new upload -->
+                <div id="icon-preview" class="hidden">
+                    <img id="icon-preview-img" src="" alt="Vorschau" class="w-16 h-16 rounded-xl object-cover">
+                </div>
+                
+                <!-- Upload/Change Button -->
+                <div class="flex flex-col gap-2">
+                    <label class="flex items-center gap-2 px-3 py-2 text-sm border border-light-border dark:border-dark-border rounded-lg cursor-pointer hover:border-brand-teal transition-colors">
+                        <svg class="w-4 h-4 text-light-text-muted dark:text-dark-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                        <span class="text-light-text-secondary dark:text-dark-text-secondary">{{ _('Change icon') if group.icon_url else _('Upload icon') }}</span>
+                        <input type="file" name="icon_image" id="icon-input" accept="image/*" class="hidden">
+                    </label>
+                    {% if group.icon_url %}
+                    <button type="button" id="icon-remove-btn" onclick="document.getElementById('remove-icon').value='1'; this.closest('form').submit();" 
+                        class="flex items-center gap-2 px-3 py-2 text-sm text-red-500 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        <span>{{ _('Remove') }}</span>
+                    </button>
+                    {% endif %}
+                </div>
+                <input type="hidden" name="remove_icon" id="remove-icon" value="0">
+            </div>
+        </div>
+        
+        <div>
+            <label for="name" class="block text-sm font-medium text-light-text dark:text-dark-text mb-1">
+                {{ _('Group name') }}
+            </label>
+            <input type="text" id="name" name="name" value="{{ group.name }}" required
+                class="w-full px-4 py-2 rounded-lg bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border text-light-text dark:text-dark-text focus:ring-2 focus:ring-brand-teal focus:border-transparent">
+        </div>
+        
+        <div>
+            <label for="description" class="block text-sm font-medium text-light-text dark:text-dark-text mb-1">
+                {{ _('Description') }}
+            </label>
+            <textarea id="description" name="description" rows="3"
+                class="w-full px-4 py-2 rounded-lg bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border text-light-text dark:text-dark-text focus:ring-2 focus:ring-brand-teal focus:border-transparent resize-none">{{ group.description or '' }}</textarea>
+        </div>
+        
+        <div>
+            <label for="color" class="block text-sm font-medium text-light-text dark:text-dark-text mb-1">
+                {{ _('Group color') }}
+            </label>
+            <div class="flex items-center gap-3">
+                <input type="color" id="color" name="color" value="{{ group.color }}"
+                    class="w-12 h-10 rounded cursor-pointer border-0">
+                <div class="flex gap-2">
+                    {% for c in ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'] %}
+                    <button type="button" onclick="document.getElementById('color').value='{{ c }}'" 
+                        class="w-8 h-8 rounded-full border-2 border-transparent hover:border-white/50 transition-colors"
+                        style="background-color: {{ c }}"></button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-6 mt-2 border-t border-light-border dark:border-dark-border">
+            <button type="submit" class="btn-primary w-full py-3 text-base shadow-lg shadow-black/10">
+                <span class="inline-flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    {{ _('Save changes') }}
+                </span>
+            </button>
+        </div>
+    </form>
+    
+    <!-- Invite Member -->
+    <div class="glass-card p-6 rounded-lg mb-6">
+        <h2 class="text-lg font-semibold text-light-text dark:text-dark-text mb-4">{{ _('Invite member') }}</h2>
+        <form action="{{ url_for('social.invite_to_group', slug=group.slug) }}" method="POST" class="flex gap-2" id="invite-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="flex-1 relative">
+                <input type="hidden" name="username" id="invite-username-hidden">
+                <input type="text" id="invite-search" placeholder="{{ _('Search user...') }}" autocomplete="off"
+                    class="w-full px-4 py-2 rounded-lg bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border text-light-text dark:text-dark-text focus:ring-2 focus:ring-brand-teal focus:border-transparent">
+                <div id="invite-suggestions" class="hidden absolute z-20 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface shadow-lg">
+                </div>
+            </div>
+            <button type="submit" class="btn-primary">
+                {{ _('Invite') }}
+            </button>
+        </form>
+        
+        <!-- Invite All Users -->
+        <div class="mt-4 pt-4 border-t border-light-border dark:border-dark-border">
+            <form id="invite-all-form" action="{{ url_for('social.invite_all_to_group', slug=group.slug) }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-light-text dark:text-dark-text">{{ _('Invite all portal users') }}</p>
+                        <p class="text-xs text-light-text-muted dark:text-dark-text-muted">{{ _('Invites all registered users to this group') }}</p>
+                    </div>
+                    <button type="button" onclick="window.confirmModal.show({title: window.I18N.invite_all, message: window.I18N.invite_all_confirm, confirmText: window.I18N.invite_all, confirmClass: 'bg-purple-600 hover:bg-purple-700', form: document.getElementById('invite-all-form')})" class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors">
+                        {{ _('Invite all') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Members List -->
+    <div class="glass-card p-6 rounded-lg">
+        <h2 class="text-lg font-semibold text-light-text dark:text-dark-text mb-4">{{ _('Members') }} ({{ group.members.count() }})</h2>
+        <div class="space-y-3">
+            {% for membership in group.members %}
+            <div class="flex items-center justify-between p-3 rounded-lg bg-light-bg/50 dark:bg-dark-bg/50">
+                <div class="flex items-center gap-3">
+                    <a href="{{ url_for('blog.public_profile', username=membership.user.username) }}">
+                        {% if membership.user.avatar_url %}
+                        <img src="{{ membership.user.avatar_url }}" alt="{{ membership.user.username }}" class="w-10 h-10 rounded-full object-cover">
+                        {% else %}
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white" style="background-color: {{ membership.user.theme_color or '#4da9a4' }}">
+                            {{ (membership.user.display_name or membership.user.username)[0]|upper }}
+                        </div>
+                        {% endif %}
+                    </a>
+                    <div>
+                        <a href="{{ url_for('blog.public_profile', username=membership.user.username) }}" class="font-medium text-light-text dark:text-dark-text hover:text-brand-teal">
+                            {{ membership.user.display_name or membership.user.username }}
+                        </a>
+                        <p class="text-xs text-light-text-muted dark:text-dark-text-muted">
+                            @{{ membership.user.username }}
+                            {% if membership.role == 'admin' %}
+                            <span class="ml-1 px-1.5 py-0.5 bg-brand-teal/20 text-brand-teal rounded text-xs">Admin</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% if membership.user.id != current_user.id %}
+                <div class="flex items-center gap-1">
+                    <form action="{{ url_for('social.toggle_admin_role', slug=group.slug, user_id=membership.user.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="p-2 text-light-text-muted dark:text-dark-text-muted hover:text-brand-teal transition-colors" 
+                                title="{% if membership.role == 'admin' %}{{ _('Remove admin role') }}{% else %}{{ _('Make admin') }}{% endif %}">
+                            {% if membership.role == 'admin' %}
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                            </svg>
+                            {% else %}
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                            {% endif %}
+                        </button>
+                    </form>
+                    <form id="remove-member-form-{{ membership.user.id }}" action="{{ url_for('social.remove_from_group', slug=group.slug, user_id=membership.user.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="button" onclick="window.confirmModal.show({title: window.I18N.remove_member, message: window.I18N.remove_member_confirm.replace('{name}', '{{ membership.user.display_name or membership.user.username }}'), confirmText: window.I18N.remove, confirmClass: 'bg-red-600 hover:bg-red-700', form: document.getElementById('remove-member-form-{{ membership.user.id }}')})" class="p-2 text-light-text-muted dark:text-dark-text-muted hover:text-red-500 transition-colors" title="{{ _('Remove') }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="glass-card p-6 rounded-lg mt-6 border border-red-300/60 dark:border-red-800/60">
+        <h2 class="text-lg font-semibold text-light-text dark:text-dark-text mb-2">{{ _('Delete group') }}</h2>
+        <p class="text-sm text-light-text-muted dark:text-dark-text-muted mb-4">
+            {{ _('This action deletes the group') }} <b>{{ group.name }}</b> {{ _('including posts, files and memberships. This cannot be undone.') }}
+        </p>
+
+        <button type="button" id="open-delete-group" class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">
+            {{ _('Delete group permanently') }}
+        </button>
+
+        <form id="delete-group-form" action="{{ url_for('social.delete_group', slug=group.slug) }}" method="POST" class="hidden">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="confirm_group_name" id="confirm-group-name-hidden" value="">
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const inviteSearch = document.getElementById('invite-search');
+    const inviteHidden = document.getElementById('invite-username-hidden');
+    const inviteSuggestions = document.getElementById('invite-suggestions');
+    const inviteForm = document.getElementById('invite-form');
+    let searchTimeout = null;
+
+    function closeSuggestions() {
+        inviteSuggestions.classList.add('hidden');
+        inviteSuggestions.innerHTML = '';
+    }
+
+    function renderSuggestions(users) {
+        if (!users || users.length === 0) {
+            inviteSuggestions.innerHTML = '<div class="px-4 py-3 text-sm text-light-text-muted dark:text-dark-text-muted">' + window.I18N.no_users_found + '</div>';
+            inviteSuggestions.classList.remove('hidden');
+            return;
+        }
+        inviteSuggestions.innerHTML = users.map(u => `
+            <button type="button" class="user-suggestion w-full text-left px-4 py-3 hover:bg-light-bg dark:hover:bg-dark-bg transition-colors flex items-center gap-3" data-username="${u.username}">
+                ${u.avatar_url 
+                    ? `<img src="${u.avatar_url}" alt="${u.username}" class="w-8 h-8 rounded-full object-cover">`
+                    : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white" style="background-color: ${u.theme_color || '#4da9a4'}">${(u.display_name || u.username)[0].toUpperCase()}</div>`
+                }
+                <div>
+                    <div class="font-medium text-light-text dark:text-dark-text">${u.display_name || u.username}</div>
+                    <div class="text-xs text-light-text-muted dark:text-dark-text-muted">@${u.username}</div>
+                </div>
+            </button>
+        `).join('');
+
+        inviteSuggestions.querySelectorAll('.user-suggestion').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const username = btn.dataset.username;
+                inviteHidden.value = username;
+                inviteSearch.value = '@' + username;
+                closeSuggestions();
+            });
+        });
+        inviteSuggestions.classList.remove('hidden');
+    }
+
+    function searchUsers(q) {
+        fetch('/api/users/search?q=' + encodeURIComponent(q))
+            .then(res => res.json())
+            .then(data => renderSuggestions(data.users || []))
+            .catch(() => closeSuggestions());
+    }
+
+    if (inviteSearch) {
+        inviteSearch.addEventListener('input', function() {
+            const q = this.value.trim().replace(/^@/, '');
+            
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (!q || q.length < 1) {
+                    inviteHidden.value = '';
+                    closeSuggestions();
+                    return;
+                }
+                inviteHidden.value = '';
+                searchUsers(q);
+            }, 200);
+        });
+
+        inviteSearch.addEventListener('focus', function() {
+            const q = this.value.trim().replace(/^@/, '');
+            if (q && q.length >= 1 && !inviteHidden.value) {
+                searchUsers(q);
+            }
+        });
+
+        inviteSearch.addEventListener('blur', function() {
+            setTimeout(closeSuggestions, 200);
+        });
+    }
+
+    if (inviteForm) {
+        inviteForm.addEventListener('submit', function(e) {
+            if (!inviteHidden.value) {
+                const raw = (inviteSearch.value || '').trim().replace(/^@/, '');
+                if (raw) {
+                    inviteHidden.value = raw;
+                } else {
+                    e.preventDefault();
+                    inviteSearch.focus();
+                }
+            }
+        });
+    }
+
+    // Cover image preview
+    const coverInput = document.getElementById('cover-input');
+    const coverPreview = document.getElementById('cover-preview');
+    const coverPreviewImg = document.getElementById('cover-preview-img');
+    const coverPreviewRemove = document.getElementById('cover-preview-remove');
+    const coverUploadLabel = document.getElementById('cover-upload-label');
+
+    if (coverInput) {
+        coverInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    coverPreviewImg.src = e.target.result;
+                    coverPreview.classList.remove('hidden');
+                    coverUploadLabel.classList.add('hidden');
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+
+    if (coverPreviewRemove) {
+        coverPreviewRemove.addEventListener('click', function() {
+            coverInput.value = '';
+            coverPreview.classList.add('hidden');
+            coverUploadLabel.classList.remove('hidden');
+        });
+    }
+
+    // Icon/Avatar preview
+    const iconInput = document.getElementById('icon-input');
+    const iconPreview = document.getElementById('icon-preview');
+    const iconPreviewImg = document.getElementById('icon-preview-img');
+    const iconDefault = document.getElementById('icon-default');
+    const iconCurrent = document.getElementById('icon-current');
+
+    if (iconInput) {
+        iconInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    iconPreviewImg.src = e.target.result;
+                    iconPreview.classList.remove('hidden');
+                    if (iconDefault) iconDefault.classList.add('hidden');
+                    if (iconCurrent) iconCurrent.classList.add('hidden');
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+
+    // Delete group modal
+    const openDeleteGroupBtn = document.getElementById('open-delete-group');
+    const deleteGroupForm = document.getElementById('delete-group-form');
+
+    function ensureDeleteGroupModal() {
+        if (document.getElementById('delete-group-modal')) return;
+        const modalHtml = `
+            <div id="delete-group-modal" class="hidden fixed inset-0 flex items-center justify-center" style="z-index: 9999;">
+                <div id="delete-group-modal-backdrop" class="fixed inset-0 bg-black/60 transition-opacity" style="z-index: 9999;"></div>
+                <div class="relative bg-light-surface dark:bg-dark-surface rounded-lg shadow-2xl border border-light-border dark:border-dark-border max-w-md w-full mx-3 sm:mx-4 p-5 sm:p-6" style="z-index: 10000;">
+                    <div class="flex items-center justify-between gap-3 mb-3">
+                        <h3 class="font-heading text-lg font-bold text-light-text dark:text-dark-text">${window.I18N.delete_group}</h3>
+                        <button type="button" id="delete-group-close" class="p-2 rounded-md hover:bg-light-bg dark:hover:bg-dark-bg transition-colors" title="${window.I18N.close}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="text-sm text-light-text-muted dark:text-dark-text-muted mb-4">
+                        ${window.I18N.delete_group_confirm_text.replace('{name}', '{{ group.name }}')}
+                    </p>
+                    <input id="delete-group-confirm-input" type="text" class="w-full px-4 py-2 rounded-lg bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border text-light-text dark:text-dark-text focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="{{ group.name }}" autocomplete="off">
+                    <div class="flex items-center justify-end gap-2 mt-4">
+                        <button type="button" id="delete-group-cancel" class="px-4 py-2 text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary hover:text-light-text dark:hover:text-dark-text transition-colors">${window.I18N.cancel}</button>
+                        <button type="button" id="delete-group-confirm-btn" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg opacity-50 cursor-not-allowed" disabled>
+                            ${window.I18N.delete_permanently}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    function openDeleteGroupModal() {
+        ensureDeleteGroupModal();
+        const modal = document.getElementById('delete-group-modal');
+        const backdrop = document.getElementById('delete-group-modal-backdrop');
+        const closeBtn = document.getElementById('delete-group-close');
+        const cancelBtn = document.getElementById('delete-group-cancel');
+        const input = document.getElementById('delete-group-confirm-input');
+        const confirmBtn = document.getElementById('delete-group-confirm-btn');
+
+        if (!modal || !backdrop || !closeBtn || !cancelBtn || !input || !confirmBtn) return;
+
+        const expected = '{{ group.name }}';
+        input.value = '';
+        confirmBtn.disabled = true;
+        confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        confirmBtn.classList.remove('hover:bg-red-700');
+
+        function close() {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function onInput() {
+            const ok = (input.value || '').trim() === expected;
+            confirmBtn.disabled = !ok;
+            if (ok) {
+                confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                confirmBtn.classList.add('hover:bg-red-700');
+            } else {
+                confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                confirmBtn.classList.remove('hover:bg-red-700');
+            }
+        }
+
+        input.addEventListener('input', onInput);
+        backdrop.addEventListener('click', close);
+        closeBtn.addEventListener('click', close);
+        cancelBtn.addEventListener('click', close);
+
+        confirmBtn.addEventListener('click', function() {
+            if (!deleteGroupForm) return;
+            const hidden = document.getElementById('confirm-group-name-hidden');
+            if (hidden) hidden.value = (input.value || '').trim();
+            deleteGroupForm.submit();
+        });
+
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => input.focus(), 50);
+    }
+
+    if (openDeleteGroupBtn) {
+        openDeleteGroupBtn.addEventListener('click', openDeleteGroupModal);
+    }
+</script>
+{% endblock %}

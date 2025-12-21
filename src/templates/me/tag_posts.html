@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "components/post_card.html" import post_card_compact with context %}
+
+{% block title %}Tag: {{ tag.name }} - Chronicle{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+            <span class="w-4 h-4 rounded-full" style="background-color: {{ tag.color }}"></span>
+            <h1 class="font-heading text-2xl font-bold">{{ tag.name }}</h1>
+            <span class="text-sm text-light-text-muted dark:text-dark-text-muted">({{ posts|length }} Beiträge)</span>
+        </div>
+        <a href="{{ url_for('social.manage_tags') }}" class="text-sm text-light-text-muted dark:text-dark-text-muted hover:text-brand-teal transition-colors">
+            Alle Tags
+        </a>
+    </div>
+    
+    {% if posts %}
+    <div class="space-y-4">
+        {% for post in posts %}
+        {{ post_card_compact(post, current_user.theme_color, is_owner=true) }}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-light-surface dark:bg-dark-surface rounded-lg p-12 text-center">
+        <p class="text-light-text-muted dark:text-dark-text-muted">Keine Beiträge mit diesem Tag.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

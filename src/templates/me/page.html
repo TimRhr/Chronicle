@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% from "components/post_card.html" import post_card_own with context %}
+{% from "components/sidebar.html" import profile_sidebar %}
+{% from "components/reactions_js.html" import reactions_scripts %}
+
+{% block title %}{{ page.title }} - Chronicle{% endblock %}
+
+{% block content %}
+<!-- Cover Image with Parallax -->
+{% if current_user.cover_image_url %}
+<div class="relative h-56 md:h-72 -mx-4 md:-mx-8 -mt-4 mb-6 cover-container">
+    <div class="absolute inset-x-4 inset-y-2 rounded-2xl overflow-hidden shadow-lg cover-frame" style="border-radius: 1rem;">
+        <img src="{{ current_user.cover_image_url }}" alt="Cover" class="w-full h-full object-cover cover-image scale-110" style="border-radius: 1rem;">
+    </div>
+    <div class="absolute inset-x-4 inset-y-2 rounded-2xl pointer-events-none" style="box-shadow: inset 0 0 30px 10px var(--cover-blur-color, rgba(247,250,248,0.5));"></div>
+    <div class="absolute inset-x-4 bottom-2 h-20 bg-gradient-to-t from-light-bg dark:from-dark-bg to-transparent rounded-b-2xl"></div>
+</div>
+{% endif %}
+
+<div class="max-w-6xl mx-auto px-2 sm:px-4">
+    <div class="grid md:grid-cols-4 gap-4 sm:gap-6">
+        <!-- Sidebar -->
+        {{ profile_sidebar(current_user, pages, active_page=page.slug, cover_offset=current_user.cover_image_url) }}
+        
+        <!-- Main Content -->
+        <main class="md:col-span-3 max-w-2xl">
+
+            <div class="flex flex-wrap gap-2 mb-4 {% if pages|length > 8 %}max-h-32 overflow-y-auto{% endif %}">
+                <a href="{{ url_for('blog.me') }}"
+                    class="group inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                    style="background: linear-gradient(135deg, {{ current_user.theme_color or '#4da9a4' }}15, {{ current_user.theme_color or '#4da9a4' }}08); border: 1px solid {{ current_user.theme_color or '#4da9a4' }}30;">
+                    <svg class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: {{ current_user.theme_color or '#4da9a4' }}"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    <span class="text-light-text-primary dark:text-dark-text-primary">{{ _('Overview') }}</span>
+                </a>
+                {% for p in pages %}
+                <a href="{{ url_for('blog.view_page', slug=p.slug) }}"
+                    class="group inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                    style="background: linear-gradient(135deg, {{ current_user.theme_color or '#4da9a4' }}{% if page.slug == p.slug %}30{% else %}15{% endif %}, {{ current_user.theme_color or '#4da9a4' }}{% if page.slug == p.slug %}18{% else %}08{% endif %}); border: 1px solid {{ current_user.theme_color or '#4da9a4' }}{% if page.slug == p.slug %}60{% else %}30{% endif %};">
+                    <svg class="w-4 h-4 {% if page.slug == p.slug %}opacity-100{% else %}opacity-60{% endif %} group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: {{ current_user.theme_color or '#4da9a4' }}"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span class="text-light-text-primary dark:text-dark-text-primary">{{ p.title }}</span>
+                </a>
+                {% endfor %}
+            </div>
+
+            {% if page.description %}
+            <p class="text-light-text-muted dark:text-dark-text-muted mb-6">{{ page.description }}</p>
+            {% endif %}
+            
+            {% if posts %}
+            <div id="posts-container" class="space-y-4" data-page-slug="{{ page.slug }}">
+                {% for post in posts %}
+                {{ post_card_own(post, current_user.theme_color) }}
+                {% endfor %}
+            </div>
+
+            <!-- Infinite Scroll Trigger -->
+            {% if has_more %}
+            <div id="infinite-scroll-trigger" class="mt-6 py-4" data-page="{{ current_page + 1 }}">
+                <div id="loading-indicator" class="hidden">
+                    <div class="glass-card p-6 animate-pulse">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 bg-light-border dark:bg-dark-border rounded-full"></div>
+                            <div class="flex-1">
+                                <div class="h-4 bg-light-border dark:bg-dark-border rounded w-32 mb-2"></div>
+                                <div class="h-3 bg-light-border dark:bg-dark-border rounded w-48"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="h-4 bg-light-border dark:bg-dark-border rounded w-full"></div>
+                            <div class="h-4 bg-light-border dark:bg-dark-border rounded w-5/6"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div id="end-of-posts" class="hidden mt-6 text-center text-sm text-light-text-muted dark:text-dark-text-muted">
+                {{ _('No more posts') }}
+            </div>
+            {% else %}
+            <div class="glass-card p-12 text-center">
+                <svg class="w-16 h-16 mx-auto mb-4 text-light-text-muted dark:text-dark-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+                <h3 class="font-heading text-lg font-bold mb-2">{{ _('No posts on this page') }}</h3>
+                <p class="text-light-text-muted dark:text-dark-text-muted mb-4">{{ _('Create a new post for this page.') }}</p>
+                <a href="{{ url_for('blog.new_post') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-md" style="background-color: {{ current_user.theme_color or '#4da9a4' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    {{ _('Create post') }}
+                </a>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Image gallery expand/collapse
+        document.querySelectorAll('.image-gallery').forEach(function(gallery) {
+            // Count actual image elements
+            const totalImages = gallery.querySelectorAll('.group').length;
+            
+            // Check if content overflows (more images than fit in one row)
+            const maxHeight = 136; // 8.5rem
+            if (gallery.scrollHeight <= maxHeight || totalImages <= 3) return;
+            
+            // Calculate hidden images
+            const containerWidth = gallery.offsetWidth;
+            const imageSize = 136;
+            const imagesPerRow = Math.max(1, Math.floor(containerWidth / imageSize));
+            const hiddenCount = totalImages - imagesPerRow;
+            
+            if (hiddenCount <= 0) return;
+            
+            // Create button dynamically
+            const color = gallery.dataset.color || '#4da9a4';
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'mt-2 text-sm font-medium transition-colors flex items-center gap-1';
+            btn.style.color = color;
+            btn.innerHTML = `<span class="expand-text">${window.I18N.show_more} (${hiddenCount} ${window.I18N.more})</span><svg class="w-4 h-4 expand-icon transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>`;
+            
+            const moreText = `${window.I18N.show_more} (${hiddenCount} ${window.I18N.more})`;
+            gallery.parentNode.appendChild(btn);
+            
+            btn.addEventListener('click', function() {
+                const isCollapsed = gallery.dataset.collapsed === 'true';
+                const textSpan = btn.querySelector('.expand-text');
+                const icon = btn.querySelector('.expand-icon');
+                
+                if (isCollapsed) {
+                    gallery.style.maxHeight = gallery.scrollHeight + 'px';
+                    gallery.dataset.collapsed = 'false';
+                    textSpan.textContent = window.I18N.show_less;
+                    icon.style.transform = 'rotate(180deg)';
+                } else {
+                    gallery.style.maxHeight = '8.5rem';
+                    gallery.dataset.collapsed = 'true';
+                    textSpan.textContent = moreText;
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            });
+        });
+    });
+    
+    // YouTube click-to-play - open in new tab (most reliable)
+    document.querySelectorAll('.youtube-preview').forEach(function(preview) {
+        preview.addEventListener('click', function() {
+            const videoId = this.dataset.videoId;
+            window.open('https://www.youtube.com/watch?v=' + videoId, '_blank');
+        });
+    });
+    
+    // Delete post with confirm modal
+    document.querySelectorAll('.delete-post-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const form = this.closest('.delete-post-form');
+            window.confirmModal.show({
+                title: window.I18N.delete_post,
+                message: window.I18N.delete_post_confirm,
+                confirmText: window.I18N.delete,
+                confirmClass: 'bg-red-600 hover:bg-red-700',
+                form: form
+            });
+        });
+    });
+
+    // Infinite Scroll (me page)
+    const postsContainer = document.getElementById('posts-container');
+    let isLoading = false;
+    let hasMore = {{ 'true' if has_more else 'false' }};
+    const pageSlug = '{{ page.slug }}';
+
+    function loadMorePosts() {
+        if (isLoading || !hasMore || !postsContainer) return;
+
+        const trigger = document.getElementById('infinite-scroll-trigger');
+        if (!trigger) return;
+
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const nextPage = parseInt(trigger.dataset.page);
+
+        isLoading = true;
+        if (loadingIndicator) loadingIndicator.classList.remove('hidden');
+
+        fetch('/me/page/' + encodeURIComponent(pageSlug) + '/api?page=' + nextPage)
+            .then(res => res.json())
+            .then(data => {
+                const html = (data && data.html) ? data.html : '';
+                if (html) {
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = html;
+                    const newArticles = Array.from(wrapper.querySelectorAll('article'));
+                    newArticles.forEach(a => postsContainer.appendChild(a));
+
+                    setTimeout(() => {
+                        if (typeof window.initArticleInteractions === 'function') {
+                            newArticles.forEach(a => window.initArticleInteractions(a));
+                        }
+                        if (typeof window.refreshPostCollapse === 'function') {
+                            newArticles.forEach(a => window.refreshPostCollapse(a));
+                        }
+                    }, 100);
+                }
+
+                hasMore = !!(data && data.has_more);
+                if (hasMore) {
+                    trigger.dataset.page = String((data && data.page ? data.page : nextPage) + 1);
+                } else {
+                    trigger.remove();
+                    const endEl = document.getElementById('end-of-posts');
+                    if (endEl) endEl.classList.remove('hidden');
+                }
+            })
+            .catch(err => {
+                console.error('Error loading posts:', err);
+            })
+            .finally(() => {
+                isLoading = false;
+                if (loadingIndicator) loadingIndicator.classList.add('hidden');
+            });
+    }
+
+    const scrollTrigger = document.getElementById('infinite-scroll-trigger');
+    if (scrollTrigger) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    loadMorePosts();
+                }
+            });
+        }, { rootMargin: '200px' });
+
+        observer.observe(scrollTrigger);
+    }
+</script>
+{{ reactions_scripts(current_user.theme_color, current_user.id) }}
+{% endblock %}
+

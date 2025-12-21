@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "components/post_card.html" import post_card_full with context %}
+{% from "components/reactions_js.html" import reactions_scripts %}
+{% from "components/poll.html" import poll_voting_js %}
+
+{% block title %}Archiv {{ year }} - Chronicle{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <a href="{{ url_for('social.archive') }}" class="text-sm text-light-text-muted dark:text-dark-text-muted hover:text-brand-teal transition-colors mb-1 inline-block">
+                ← Archiv
+            </a>
+            <h1 class="font-heading text-2xl font-bold">{{ year }}</h1>
+        </div>
+        <span class="text-sm text-light-text-muted dark:text-dark-text-muted">{{ posts|length }} Beiträge</span>
+    </div>
+    
+    {% if posts %}
+    <div class="space-y-6">
+        {% for post in posts %}
+        {% set is_own_post = current_user.is_authenticated and current_user.id == post.author.id %}
+        {{ post_card_full(post, post.author.theme_color, is_own_post) }}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-light-surface dark:bg-dark-surface rounded-lg p-12 text-center">
+        <p class="text-light-text-muted dark:text-dark-text-muted">Keine Beiträge in {{ year }}.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ poll_voting_js() }}
+{{ reactions_scripts(current_user.theme_color, current_user.id if current_user.is_authenticated else None) }}
+{% endblock %}
+

@@ -1,0 +1,90 @@
+<!-- Widgets Component -->
+
+{% macro about_widget(user) %}
+<div class="glass-card p-4 mb-4">
+    <h3 class="font-heading text-sm font-bold mb-3 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        {{ _('About me') }}
+    </h3>
+    <div class="flex items-center gap-3 mb-3">
+        {% if user.avatar_url %}
+        <img src="{{ user.avatar_url }}" alt="Avatar" class="w-10 h-10 rounded-full object-cover">
+        {% else %}
+        <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white" style="background-color: {{ user.theme_color or '#4da9a4' }}">
+            {{ (user.display_name or user.username)[0]|upper }}
+        </div>
+        {% endif %}
+        <div>
+            <p class="font-medium text-sm">{{ user.display_name or user.username }}</p>
+            <p class="text-xs text-light-text-muted dark:text-dark-text-muted">@{{ user.username }}</p>
+        </div>
+    </div>
+    {% if user.bio %}
+    <p class="text-xs text-light-text-secondary dark:text-dark-text-secondary line-clamp-3">{{ user.bio }}</p>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro recent_posts_widget(posts, theme_color) %}
+<div class="glass-card p-4 mb-4">
+    <h3 class="font-heading text-sm font-bold mb-3 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        {{ _('Recent posts') }}
+    </h3>
+    <div class="space-y-2">
+        {% for post in posts[:5] %}
+        <a href="#post-{{ post.id }}" class="block group">
+            <p class="text-sm text-light-text-secondary dark:text-dark-text-secondary group-hover:text-brand-teal transition-colors line-clamp-1">
+                {{ post.title or post.content[:50] ~ '...' if post.content else _('Post') }}
+            </p>
+            <p class="text-xs text-light-text-muted dark:text-dark-text-muted">{{ post.created_at.strftime('%d.%m.%Y') }}</p>
+        </a>
+        {% else %}
+        <p class="text-xs text-light-text-muted dark:text-dark-text-muted">{{ _('No posts') }}</p>
+        {% endfor %}
+    </div>
+</div>
+{% endmacro %}
+
+{% macro popular_posts_widget(posts, theme_color) %}
+<div class="glass-card p-4 mb-4">
+    <h3 class="font-heading text-sm font-bold mb-3 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        {{ _('Popular posts') }}
+    </h3>
+    <div class="space-y-2">
+        {% for post in posts[:5] %}
+        <a href="#post-{{ post.id }}" class="block group">
+            <div class="flex items-center justify-between">
+                <p class="text-sm text-light-text-secondary dark:text-dark-text-secondary group-hover:text-brand-teal transition-colors line-clamp-1 flex-1">
+                    {{ post.title or post.content[:40] ~ '...' if post.content else _('Post') }}
+                </p>
+                <span class="text-xs text-light-text-muted dark:text-dark-text-muted ml-2">{{ post.view_count or 0 }}</span>
+            </div>
+        </a>
+        {% else %}
+        <p class="text-xs text-light-text-muted dark:text-dark-text-muted">{{ _('No posts') }}</p>
+        {% endfor %}
+    </div>
+</div>
+{% endmacro %}
+
+{% macro stats_widget(user, post_count, page_count) %}
+<div class="glass-card p-4 mb-4">
+    <h3 class="font-heading text-sm font-bold mb-3 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        {{ _('Statistics') }}
+    </h3>
+    <div class="grid grid-cols-2 gap-3 text-center">
+        <div>
+            <p class="text-xl font-bold" style="color: {{ user.theme_color or '#4da9a4' }}">{{ post_count }}</p>
+            <p class="text-xs text-light-text-muted dark:text-dark-text-muted">{{ _('Posts') }}</p>
+        </div>
+        <div>
+            <p class="text-xl font-bold" style="color: {{ user.theme_color or '#4da9a4' }}">{{ page_count }}</p>
+            <p class="text-xs text-light-text-muted dark:text-dark-text-muted">{{ _('Pages') }}</p>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+

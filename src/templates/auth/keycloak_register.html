@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Keycloak Registrierung - Chronicle{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="glass-card p-8">
+        <h1 class="font-heading text-2xl font-bold text-center mb-2">Benutzer anlegen</h1>
+        <p class="text-sm text-center text-light-text-muted dark:text-dark-text-muted mb-6">
+            Du bist erfolgreich über Keycloak angemeldet. Wähle jetzt einen Benutzernamen, um dein Konto in Chronicle anzulegen.
+        </p>
+
+        <form method="POST" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div>
+                <label class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">
+                    E-Mail (aus Keycloak)
+                </label>
+                <input type="email" value="{{ email }}" readonly
+                    class="w-full px-4 py-2 rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg text-light-text-muted dark:text-dark-text-muted focus:outline-none">
+            </div>
+
+            <div>
+                <label for="username" class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">
+                    Benutzername
+                </label>
+                <input type="text" id="username" name="username" required minlength="3" value="{{ suggested_username or '' }}"
+                    class="w-full px-4 py-2 rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent">
+                <p class="mt-2 text-xs text-light-text-muted dark:text-dark-text-muted">
+                    Erlaubt: Buchstaben, Zahlen sowie <code>_</code> <code>.</code> <code>-</code>
+                </p>
+            </div>
+
+            <button type="submit"
+                class="w-full py-2 px-4 bg-brand-teal text-white font-medium rounded-md hover:bg-brand-blue transition-colors">
+                Konto erstellen
+            </button>
+        </form>
+
+        <p class="mt-6 text-center text-sm text-light-text-muted dark:text-dark-text-muted">
+            Doch nicht? <a href="{{ url_for('auth.cancel_keycloak_register') }}" class="text-brand-teal hover:text-brand-blue">Abbrechen</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

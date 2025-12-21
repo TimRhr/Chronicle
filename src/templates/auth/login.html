@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Login') }} - Chronicle{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="glass-card p-8">
+        <h1 class="font-heading text-2xl font-bold text-center mb-6">{{ _('Login') }}</h1>
+
+        <form method="POST" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div>
+                <label for="username" class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">
+                    {{ _('Username') }} / {{ _('Email') }}
+                </label>
+                <input type="text" id="username" name="username" required
+                    class="w-full px-4 py-2 rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent">
+            </div>
+            
+            <div>
+                <label for="password" class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">
+                    {{ _('Password') }}
+                </label>
+                <input type="password" id="password" name="password" required
+                    class="w-full px-4 py-2 rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent">
+            </div>
+            
+            <div class="flex items-center">
+                <input type="checkbox" id="remember" name="remember"
+                    class="h-4 w-4 rounded border-light-border dark:border-dark-border text-brand-teal focus:ring-brand-teal">
+                <label for="remember" class="ml-2 text-sm text-light-text-secondary dark:text-dark-text-secondary">
+                    {{ _('Remember me') }}
+                </label>
+            </div>
+            
+            <button type="submit"
+                class="w-full py-2 px-4 bg-brand-teal text-white font-medium rounded-md hover:bg-brand-blue transition-colors">
+                {{ _('Login') }}
+            </button>
+        </form>
+
+        <div class="mt-4 text-center text-sm">
+            <a href="{{ url_for('auth.forgot_password') }}" class="text-brand-teal hover:text-brand-blue">
+                {{ _('Forgot password?') }}
+            </a>
+        </div>
+        
+        {% if keycloak_enabled %}
+        <div class="mt-6">
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-light-border dark:border-dark-border"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-light-surface dark:bg-dark-surface text-light-text-muted dark:text-dark-text-muted">{{ _('or') }}</span>
+                </div>
+            </div>
+            
+            <a href="{{ url_for('auth.login_keycloak', next=next_page) }}"
+                class="mt-4 w-full flex items-center justify-center gap-2 py-2 px-4 border border-light-border dark:border-dark-border rounded-md text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg dark:hover:bg-dark-bg transition-colors">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81z"/>
+                </svg>
+                {{ _('Sign in with Keycloak') }}
+            </a>
+        </div>
+        {% endif %}
+        
+        {% if config.get('REGISTRATION_ENABLED', True) %}
+        <p class="mt-6 text-center text-sm text-light-text-muted dark:text-dark-text-muted">
+            {{ _("Don't have an account?") }} 
+            <a href="{{ url_for('auth.register') }}" class="text-brand-teal hover:text-brand-blue">
+                {{ _('Register') }}
+            </a>
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

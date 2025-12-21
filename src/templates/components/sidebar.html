@@ -1,0 +1,70 @@
+<!-- Sidebar Component -->
+
+{% macro profile_sidebar(user, pages, active_page=None, cover_offset=false, enable_avatar_easteregg=false) %}
+<aside class="md:col-span-1">
+    <div class="glass-card p-6 sticky top-20 {% if cover_offset %}-mt-32 relative z-10{% endif %}">
+        <!-- Profile Header -->
+        <div class="text-center mb-6">
+            {% if user.avatar_url %}
+                <img src="{{ user.avatar_url }}" alt="Avatar" class="w-20 h-20 rounded-full mx-auto mb-3 object-cover border-2" style="border-color: {{ user.theme_color or '#4da9a4' }}"{% if enable_avatar_easteregg %} id="me-sidebar-avatar"{% endif %}>
+            {% else %}
+                <div class="w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl font-bold text-white" style="background-color: {{ user.theme_color or '#4da9a4' }}"{% if enable_avatar_easteregg %} id="me-sidebar-avatar"{% endif %}>
+                    {{ (user.display_name or user.username)[0]|upper }}
+                </div>
+            {% endif %}
+            <h2 class="font-heading text-lg font-bold">{{ user.display_name or user.username }}</h2>
+            <p class="text-sm text-light-text-muted dark:text-dark-text-muted">@{{ user.username }}</p>
+        </div>
+        
+        {% if user.bio %}
+        <div class="mb-6 overflow-hidden" id="bio-container">
+            <p id="bio-text" class="text-sm text-light-text-secondary dark:text-dark-text-secondary transition-[max-height] duration-300 ease-in-out overflow-hidden" style="max-height: 7.5em;">{{ user.bio }}</p>
+        </div>
+        {% endif %}
+        
+        <!-- Quick Actions -->
+        <div class="mt-6 pt-6 border-t border-light-border dark:border-dark-border space-y-2">
+            <a href="{{ url_for('blog.new_post', next=request.full_path) }}" class="flex items-center justify-center gap-2 w-full px-4 py-2 text-sm font-medium text-white rounded-md transition-colors" style="background-color: {{ user.theme_color or '#4da9a4' }}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                {{ _('New post') }}
+            </a>
+            <a href="{{ url_for('blog.manage_pages') }}" class="flex items-center justify-center gap-2 w-full px-4 py-2 text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary border border-light-border dark:border-dark-border rounded-md hover:bg-light-bg dark:hover:bg-dark-bg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
+                {{ _('Manage pages') }}
+            </a>
+            <a href="{{ url_for('blog.settings') }}" class="flex items-center justify-center gap-2 w-full px-4 py-2 text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary border border-light-border dark:border-dark-border rounded-md hover:bg-light-bg dark:hover:bg-dark-bg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                {{ _('Settings') }}
+            </a>
+        </div>
+        
+        <!-- Organisation Links -->
+        <div class="mt-4 pt-4 border-t border-light-border dark:border-dark-border">
+            <p class="text-xs font-medium text-light-text-muted dark:text-dark-text-muted mb-2 uppercase tracking-wider">{{ _('Organization') }}</p>
+            <div class="space-y-1">
+                <a href="{{ url_for('social.search') }}" class="flex items-center gap-2 px-2 py-1.5 text-sm text-light-text-secondary dark:text-dark-text-secondary hover:text-brand-teal rounded transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    {{ _('Search') }}
+                </a>
+                <a href="{{ url_for('social.groups_list') }}" class="flex items-center gap-2 px-2 py-1.5 text-sm text-light-text-secondary dark:text-dark-text-secondary hover:text-brand-teal rounded transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    {{ _('Groups') }}
+                </a>
+                <a href="{{ url_for('social.manage_tags') }}" class="flex items-center gap-2 px-2 py-1.5 text-sm text-light-text-secondary dark:text-dark-text-secondary hover:text-brand-teal rounded transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                    Tags
+                </a>
+                <a href="{{ url_for('social.archive') }}" class="flex items-center gap-2 px-2 py-1.5 text-sm text-light-text-secondary dark:text-dark-text-secondary hover:text-brand-teal rounded transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    {{ _('Archive') }}
+                </a>
+                <a href="{{ url_for('social.my_bookmarks') }}" class="flex items-center gap-2 px-2 py-1.5 text-sm text-light-text-secondary dark:text-dark-text-secondary hover:text-brand-teal rounded transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+                    {{ _('Bookmarks') }}
+                </a>
+            </div>
+        </div>
+    </div>
+</aside>
+{% endmacro %}
+

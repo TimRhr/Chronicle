@@ -1,0 +1,1831 @@
+# German translations for PROJECT.
+# Copyright (C) 2025 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-12-19 10:44+0100\n"
+"PO-Revision-Date: 2025-12-19 10:44+0100\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: de\n"
+"Language-Team: de <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: src/admin.py:48
+msgid ""
+"Analytics admin is not configured. Please set ANALYTICS_ADMIN_PASSWORD in"
+" .env."
+msgstr "Analytics-Admin ist nicht konfiguriert. Bitte setze ANALYTICS_ADMIN_PASSWORD in .env."
+
+#: src/admin.py:57 src/auth.py:61
+msgid "Invalid credentials."
+msgstr "Ungültige Anmeldedaten."
+
+#: src/admin.py:67 src/auth.py:134
+msgid "You have been logged out."
+msgstr "Du wurdest abgemeldet."
+
+#: src/app.py:112
+msgid "Please log in to view this page."
+msgstr "Bitte melde dich an, um diese Seite zu sehen."
+
+#: src/app.py:221 src/templates/base.html:128
+msgid "Loading..."
+msgstr "Lädt..."
+
+#: src/app.py:222
+msgid "No notifications"
+msgstr "Keine Benachrichtigungen"
+
+#: src/app.py:223 src/templates/base.html:125
+msgid "Mark all as read"
+msgstr "Alle als gelesen markieren"
+
+#: src/app.py:224 src/templates/base.html:124
+msgid "Notifications"
+msgstr "Benachrichtigungen"
+
+#: src/app.py:225
+msgid "Show more"
+msgstr "Mehr anzeigen"
+
+#: src/app.py:226
+msgid "Show less"
+msgstr "Weniger anzeigen"
+
+#: src/app.py:227
+msgid "more"
+msgstr "mehr"
+
+#: src/app.py:228 src/templates/components/post_card.html:129
+#: src/templates/components/post_card.html:167 src/templates/feed.html:175
+#: src/templates/me/me.html:63
+msgid "edited"
+msgstr "bearbeitet"
+
+#: src/app.py:229 src/templates/feed.html:234
+#: src/templates/me/edit_post.html:209
+msgid "Image"
+msgstr "Bild"
+
+#: src/app.py:230 src/templates/components/post_interactions.html:37
+#: src/templates/feed.html:475 src/templates/me/me.html:221
+#: src/templates/public_profile.html:137
+msgid "Comments"
+msgstr "Kommentare"
+
+#: src/app.py:231 src/templates/components/post_interactions.html:48
+#: src/templates/feed.html:263 src/templates/feed.html:486
+#: src/templates/me/me.html:230 src/templates/public_profile.html:146
+#: src/templates/public_profile_page.html:114
+msgid "Write a comment..."
+msgstr "Kommentar schreiben..."
+
+#: src/app.py:232 src/templates/components/post_interactions.html:49
+#: src/templates/components/post_interactions.html:51
+#: src/templates/feed.html:264 src/templates/feed.html:266
+#: src/templates/feed.html:487 src/templates/feed.html:489
+#: src/templates/me/me.html:231 src/templates/me/me.html:233
+#: src/templates/public_profile.html:147 src/templates/public_profile.html:149
+#: src/templates/public_profile_page.html:116
+msgid "Send"
+msgstr "Senden"
+
+#: src/app.py:233 src/templates/components/post_interactions.html:73
+msgid "Reply"
+msgstr "Antworten"
+
+#: src/app.py:234 src/templates/components/confirm_modal.html:19
+#: src/templates/components/group_announcement_card.html:59
+#: src/templates/groups/files.html:147 src/templates/me/manage_pages.html:87
+msgid "Delete"
+msgstr "Löschen"
+
+#: src/app.py:235 src/templates/components/group_announcement_card.html:51
+#: src/templates/me/manage_pages.html:82
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#: src/app.py:236 src/templates/components/confirm_modal.html:16
+#: src/templates/groups/announcement_form.html:94
+#: src/templates/me/edit_page.html:53 src/templates/me/edit_post.html:243
+#: src/templates/me/new_post.html:277
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: src/app.py:237 src/templates/groups/announcement_form.html:97
+#: src/templates/me/edit_page.html:56 src/templates/me/edit_post.html:246
+#: src/templates/me/settings.html:211
+msgid "Save"
+msgstr "Speichern"
+
+#: src/app.py:238 src/templates/components/confirm_modal.html:11
+msgid "Confirm"
+msgstr "Bestätigen"
+
+#: src/app.py:239 src/templates/base.html:220
+#: src/templates/groups/detail.html:140
+msgid "Close"
+msgstr "Schließen"
+
+#: src/app.py:240 src/templates/components/post_card.html:143
+#: src/templates/feed.html:189 src/templates/feed.html:434
+msgid "Delete post"
+msgstr "Beitrag löschen"
+
+#: src/app.py:241
+msgid "Do you really want to delete this post? This action cannot be undone."
+msgstr "Möchtest du diesen Beitrag wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+
+#: src/app.py:242
+msgid "Delete page"
+msgstr "Seite löschen"
+
+#: src/app.py:243
+#, python-brace-format
+msgid "Do you really want to delete the page \"{title}\" and all related posts?"
+msgstr "Möchtest du die Seite \"{title}\" und alle zugehörigen Beiträge wirklich löschen?"
+
+#: src/app.py:244
+msgid "Delete file"
+msgstr "Datei löschen"
+
+#: src/app.py:245
+msgid "Do you really want to delete this file?"
+msgstr "Möchtest du diese Datei wirklich löschen?"
+
+#: src/app.py:246
+msgid "Delete announcement"
+msgstr "Ankündigung löschen"
+
+#: src/app.py:247
+msgid ""
+"Do you really want to delete this announcement? This action cannot be "
+"undone."
+msgstr "Möchtest du diese Ankündigung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+
+#: src/app.py:248 src/templates/feed.html:304
+#: src/templates/public_profile.html:95
+msgid "No more posts"
+msgstr "Keine weiteren Beiträge"
+
+#: src/app.py:249
+msgid "Load more"
+msgstr "Mehr laden"
+
+#: src/app.py:250 src/templates/components/post_interactions.html:34
+#: src/templates/feed.html:472 src/templates/me/me.html:218
+#: src/templates/public_profile.html:134
+msgid "Bookmark"
+msgstr "Lesezeichen"
+
+#: src/app.py:251
+msgid "Bookmarked"
+msgstr "Gespeichert"
+
+#: src/app.py:253
+msgid "No comments yet."
+msgstr "Noch keine Kommentare."
+
+#: src/app.py:254
+msgid "No trending tags"
+msgstr "Keine beliebten Tags"
+
+#: src/app.py:255
+msgid "Error loading"
+msgstr "Fehler beim Laden"
+
+#: src/app.py:256
+msgid "older comments"
+msgstr "ältere Kommentare"
+
+#: src/app.py:257
+msgid "Show replies"
+msgstr "Antworten anzeigen"
+
+#: src/app.py:258
+msgid "Hide replies"
+msgstr "Antworten ausblenden"
+
+#: src/app.py:259
+msgid "reply"
+msgstr "Antwort"
+
+#: src/app.py:260
+msgid "replies"
+msgstr "Antworten"
+
+#: src/app.py:261 src/templates/components/post_interactions.html:14
+#: src/templates/feed.html:456 src/templates/public_profile.html:119
+msgid "Click to change"
+msgstr "Klicken zum Ändern"
+
+#: src/app.py:262 src/templates/components/post_interactions.html:22
+#: src/templates/feed.html:461 src/templates/feed.html:462
+#: src/templates/feed.html:463 src/templates/feed.html:464
+#: src/templates/feed.html:465 src/templates/feed.html:466
+#: src/templates/public_profile.html:124 src/templates/public_profile.html:125
+#: src/templates/public_profile.html:126 src/templates/public_profile.html:127
+#: src/templates/public_profile.html:128 src/templates/public_profile.html:129
+msgid "React"
+msgstr "Reagieren"
+
+#: src/app.py:263
+msgid "Remove reaction"
+msgstr "Reaktion entfernen"
+
+#: src/app.py:264
+msgid "Anonymous"
+msgstr "Anonym"
+
+#: src/app.py:265
+msgid "Delete comment"
+msgstr "Kommentar löschen"
+
+#: src/app.py:266
+msgid "Do you really want to delete this comment? This action cannot be undone."
+msgstr "Möchtest du diesen Kommentar wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+
+#: src/app.py:267
+msgid "Error saving"
+msgstr "Fehler beim Speichern"
+
+#: src/app.py:268
+msgid "Error deleting"
+msgstr "Fehler beim Löschen"
+
+#: src/app.py:269
+msgid "Please log in to react."
+msgstr "Bitte melde dich an, um zu reagieren."
+
+#: src/app.py:271 src/templates/groups/detail.html:58
+msgid "Leave"
+msgstr "Verlassen"
+
+#: src/app.py:272
+msgid "Do you really want to leave this group?"
+msgstr "Möchtest du diese Gruppe wirklich verlassen?"
+
+#: src/app.py:273 src/templates/groups/settings.html:178
+msgid "Invite all"
+msgstr "Alle einladen"
+
+#: src/app.py:274
+msgid ""
+"Do you really want to invite all portal users to this group? This cannot "
+"be undone."
+msgstr "Möchtest du wirklich alle Portalbenutzer in diese Gruppe einladen? Dies kann nicht rückgängig gemacht werden."
+
+#: src/app.py:275
+msgid "Remove member"
+msgstr "Mitglied entfernen"
+
+#: src/app.py:276
+#, python-brace-format
+msgid "Do you really want to remove {name} from the group?"
+msgstr "Möchtest du {name} wirklich aus der Gruppe entfernen?"
+
+#: src/app.py:277 src/templates/groups/settings.html:98
+#: src/templates/groups/settings.html:232
+msgid "Remove"
+msgstr "Entfernen"
+
+#: src/app.py:278
+msgid "No users found"
+msgstr "Keine Benutzer gefunden"
+
+#: src/app.py:279 src/templates/groups/settings.html:246
+msgid "Delete group"
+msgstr "Gruppe löschen"
+
+#: src/app.py:280
+#, python-brace-format
+msgid "Type the group name <b>{name}</b> to confirm deletion."
+msgstr "Gib den Gruppennamen <b>{name}</b> ein, um das Löschen zu bestätigen."
+
+#: src/app.py:281
+msgid "Delete permanently"
+msgstr "Endgültig löschen"
+
+#: src/app.py:283
+msgid "Delete image"
+msgstr "Bild löschen"
+
+#: src/app.py:284
+msgid "Really delete image?"
+msgstr "Bild wirklich löschen?"
+
+#: src/app.py:285
+msgid ""
+"Please select whether the post should appear on your profile or in a "
+"group."
+msgstr "Bitte wähle aus, ob der Beitrag auf deinem Profil oder in einer Gruppe erscheinen soll."
+
+#: src/app.py:286
+msgid "Remove image"
+msgstr "Bild entfernen"
+
+#: src/app.py:287
+msgid "Remove this image from the selection?"
+msgstr "Dieses Bild aus der Auswahl entfernen?"
+
+#: src/app.py:288 src/templates/me/new_post.html:185
+msgid "+ Add poll"
+msgstr "+ Umfrage hinzufügen"
+
+#: src/app.py:289
+msgid "− Hide poll"
+msgstr "− Umfrage ausblenden"
+
+#: src/app.py:290 src/templates/me/edit_post.html:175
+#: src/templates/me/new_post.html:234
+msgid "+ Set time"
+msgstr "+ Zeit festlegen"
+
+#: src/app.py:291
+msgid "− Hide schedule"
+msgstr "− Zeitplan ausblenden"
+
+#: src/app.py:292 src/templates/me/new_post.html:197
+msgid "Option 1"
+msgstr "Option 1"
+
+#: src/app.py:293 src/templates/me/new_post.html:201
+msgid "Option 2"
+msgstr "Option 2"
+
+#: src/app.py:294
+#, python-brace-format
+msgid "Option {n}"
+msgstr "Option {n}"
+
+#: src/app.py:295
+msgid "bold text"
+msgstr "fetter Text"
+
+#: src/app.py:296
+msgid "italic text"
+msgstr "kursiver Text"
+
+#: src/app.py:297
+msgid "strikethrough"
+msgstr "durchgestrichen"
+
+#: src/app.py:298 src/templates/me/edit_post.html:48
+#: src/templates/me/new_post.html:51
+msgid "Heading"
+msgstr "Überschrift"
+
+#: src/app.py:299 src/templates/me/edit_post.html:51
+#: src/templates/me/new_post.html:54
+msgid "Quote"
+msgstr "Zitat"
+
+#: src/app.py:300
+msgid "code"
+msgstr "Code"
+
+#: src/app.py:301
+msgid "List item"
+msgstr "Listeneintrag"
+
+#: src/app.py:302
+msgid "Link text"
+msgstr "Linktext"
+
+#: src/app.py:303
+msgid "code here"
+msgstr "Code hier"
+
+#: src/app.py:304
+msgid "Create tag"
+msgstr "Tag erstellen"
+
+#: src/app.py:305
+msgid "Error creating."
+msgstr "Fehler beim Erstellen."
+
+#: src/app.py:306
+msgid "Error creating tag."
+msgstr "Fehler beim Erstellen des Tags."
+
+#: src/app.py:307
+msgid "Error"
+msgstr "Fehler"
+
+#: src/app.py:309 src/templates/me/edit_page.html:8
+msgid "Edit page"
+msgstr "Seite bearbeiten"
+
+#: src/app.py:310 src/templates/me/edit_page.html:45
+msgid "Show in menu"
+msgstr "Im Menü anzeigen"
+
+#: src/app.py:312
+msgid "Delete tag"
+msgstr "Tag löschen"
+
+#: src/app.py:313
+msgid "Really delete tag?"
+msgstr "Tag wirklich löschen?"
+
+#: src/app.py:315 src/templates/groups/announcement_form.html:74
+#: src/templates/me/edit_post.html:33 src/templates/me/new_post.html:35
+msgid "Preview"
+msgstr "Vorschau"
+
+#: src/app.py:316
+msgid "No preview available"
+msgstr "Keine Vorschau verfügbar"
+
+#: src/app.py:317 src/templates/groups/announcement_form.html:86
+msgid "Preview appears here..."
+msgstr "Vorschau erscheint hier..."
+
+#: src/app.py:318
+msgid "Please select a group."
+msgstr "Bitte wähle eine Gruppe aus."
+
+#: src/auth.py:71
+msgid "Registration is disabled."
+msgstr "Registrierung ist deaktiviert."
+
+#: src/auth.py:89 src/auth.py:254
+msgid "Username must be at least 3 characters long."
+msgstr "Benutzername muss mindestens 3 Zeichen lang sein."
+
+#: src/auth.py:92
+msgid "Please enter a valid email address."
+msgstr "Bitte gib eine gültige E-Mail-Adresse ein."
+
+#: src/auth.py:96
+msgid "Password must be at least 12 characters long."
+msgstr "Passwort muss mindestens 12 Zeichen lang sein."
+
+#: src/auth.py:98
+msgid "Password must contain at least one uppercase letter."
+msgstr "Passwort muss mindestens einen Großbuchstaben enthalten."
+
+#: src/auth.py:100
+msgid "Password must contain at least one lowercase letter."
+msgstr "Passwort muss mindestens einen Kleinbuchstaben enthalten."
+
+#: src/auth.py:102
+msgid "Password must contain at least one number."
+msgstr "Passwort muss mindestens eine Zahl enthalten."
+
+#: src/auth.py:104
+msgid "Password must contain at least one special character."
+msgstr "Passwort muss mindestens ein Sonderzeichen enthalten."
+
+#: src/auth.py:107
+msgid "Passwords do not match."
+msgstr "Passwörter stimmen nicht überein."
+
+#: src/auth.py:110 src/auth.py:258
+msgid "Username is already taken."
+msgstr "Benutzername ist bereits vergeben."
+
+#: src/auth.py:113
+msgid "Email address is already registered."
+msgstr "E-Mail-Adresse ist bereits registriert."
+
+#: src/auth.py:124
+msgid "Registration successful! You can now log in."
+msgstr "Registrierung erfolgreich! Du kannst dich jetzt anmelden."
+
+#: src/auth.py:142
+msgid "Keycloak SSO is not enabled."
+msgstr "Keycloak-SSO ist nicht aktiviert."
+
+#: src/auth.py:168 src/auth.py:210
+msgid "Error during Keycloak login."
+msgstr "Fehler beim Keycloak-Login."
+
+#: src/auth.py:177
+msgid "Keycloak profile is incomplete (missing sub)."
+msgstr "Keycloak-Profil ist unvollständig (sub fehlt)."
+
+#: src/auth.py:181
+msgid "Keycloak profile has no email address. Please allow email in Keycloak."
+msgstr "Keycloak-Profil hat keine E-Mail-Adresse. Bitte erlaube E-Mail in Keycloak."
+
+#: src/auth.py:225
+msgid "Keycloak registration was canceled. Please log in again."
+msgstr "Keycloak-Registrierung wurde abgebrochen. Bitte melde dich erneut an."
+
+#: src/auth.py:236
+msgid "This account is already linked to another login provider."
+msgstr "Dieses Konto ist bereits mit einem anderen Login-Anbieter verknüpft."
+
+#: src/auth.py:256
+msgid "Username may only contain letters, numbers and _ . -"
+msgstr "Benutzername darf nur Buchstaben, Zahlen und _ . - enthalten"
+
+#: src/auth.py:260
+msgid "This Keycloak account is already linked."
+msgstr "Dieses Keycloak-Konto ist bereits verknüpft."
+
+#: src/auth.py:288
+msgid "Keycloak registration canceled."
+msgstr "Keycloak-Registrierung abgebrochen."
+
+#: src/blog.py:504
+msgid "Profile updated successfully."
+msgstr "Profil erfolgreich aktualisiert."
+
+#: src/blog.py:517
+msgid "Title is required."
+msgstr "Titel ist erforderlich."
+
+#: src/blog.py:542
+#, python-brace-format
+msgid "Page \"{title}\" was created."
+msgstr "Seite \"{title}\" wurde erstellt."
+
+#: src/blog.py:561
+msgid "Page updated."
+msgstr "Seite aktualisiert."
+
+#: src/blog.py:573
+msgid "Page deleted."
+msgstr "Seite gelöscht."
+
+#: src/blog.py:764
+msgid "Post created."
+msgstr "Beitrag erstellt."
+
+#: src/blog.py:916
+#, python-brace-format
+msgid "Post updated. {n} new images added."
+msgstr "Beitrag aktualisiert. {n} neue Bilder hinzugefügt."
+
+#: src/blog.py:918
+msgid "Post updated."
+msgstr "Beitrag aktualisiert."
+
+#: src/blog.py:947
+msgid "Post deleted."
+msgstr "Beitrag gelöscht."
+
+#: src/social.py:122
+#, python-brace-format
+msgid "{name} reacted with {emoji}"
+msgstr "{name} reagierte mit {emoji}"
+
+#: src/social.py:195
+#, python-brace-format
+msgid "{name} reacted with {emoji} to your comment"
+msgstr "{name} reagierte mit {emoji} auf deinen Kommentar"
+
+#: src/social.py:333
+#, python-brace-format
+msgid "{name} commented on your post"
+msgstr "{name} kommentierte deinen Beitrag"
+
+#: src/social.py:348
+#, python-brace-format
+msgid "{name} replied to your comment"
+msgstr "{name} antwortete auf deinen Kommentar"
+
+#: src/social.py:363
+#, python-brace-format
+msgid "{name} mentioned you in a comment"
+msgstr "{name} erwähnte dich in einem Kommentar"
+
+#: src/social.py:463
+msgid "Tag name is required."
+msgstr "Tag-Name ist erforderlich."
+
+#: src/social.py:472
+msgid "A tag with this name already exists."
+msgstr "Ein Tag mit diesem Namen existiert bereits."
+
+#: src/social.py:491
+msgid "Tag created."
+msgstr "Tag erstellt."
+
+#: src/social.py:502
+msgid "Tag deleted."
+msgstr "Tag gelöscht."
+
+#: src/social.py:745
+#, python-brace-format
+msgid "{name} is now following you"
+msgstr "{name} folgt dir jetzt"
+
+#: src/social.py:913
+msgid "New vote"
+msgstr "Neue Stimme"
+
+#: src/social.py:914
+#, python-brace-format
+msgid "{name} voted in your poll"
+msgstr "{name} hat in deiner Umfrage abgestimmt"
+
+#: src/social.py:1056
+msgid "Group name is required."
+msgstr "Gruppenname ist erforderlich."
+
+#: src/social.py:1085
+#, python-brace-format
+msgid "Group \"{name}\" created."
+msgstr "Gruppe \"{name}\" erstellt."
+
+#: src/social.py:1100 src/social.py:1361 src/social.py:1495 src/social.py:1518
+#: src/social.py:1590
+msgid "You are not a member of this group."
+msgstr "Du bist kein Mitglied dieser Gruppe."
+
+#: src/social.py:1149
+msgid "Only admins can edit group settings."
+msgstr "Nur Admins können die Gruppeneinstellungen bearbeiten."
+
+#: src/social.py:1186
+msgid "Group settings saved."
+msgstr "Gruppeneinstellungen gespeichert."
+
+#: src/social.py:1199
+msgid "Only admins can delete groups."
+msgstr "Nur Admins können Gruppen löschen."
+
+#: src/social.py:1204
+msgid "Group name does not match. Group was not deleted."
+msgstr "Gruppenname stimmt nicht überein. Gruppe wurde nicht gelöscht."
+
+#: src/social.py:1275
+#, python-brace-format
+msgid "Group \"{name}\" was deleted."
+msgstr "Gruppe \"{name}\" wurde gelöscht."
+
+#: src/social.py:1293
+msgid "User not found."
+msgstr "Benutzer nicht gefunden."
+
+#: src/social.py:1298
+msgid "User is already a member."
+msgstr "Benutzer ist bereits Mitglied."
+
+#: src/social.py:1309 src/social.py:1342
+#, python-brace-format
+msgid "{name} added you to the group \"{group}\""
+msgstr "{name} hat dich zur Gruppe \"{group}\" hinzugefügt"
+
+#: src/social.py:1314
+#, python-brace-format
+msgid "{user} was added to the group."
+msgstr "{user} wurde zur Gruppe hinzugefügt."
+
+#: src/social.py:1326
+msgid "Only admins can invite all users."
+msgstr "Nur Admins können alle Benutzer einladen."
+
+#: src/social.py:1349
+#, python-brace-format
+msgid "{n} users were added to the group."
+msgstr "{n} Benutzer wurden zur Gruppe hinzugefügt."
+
+#: src/social.py:1368
+msgid "You are the only admin. Transfer the admin role before leaving the group."
+msgstr "Du bist der einzige Admin. Übertrage die Adminrolle, bevor du die Gruppe verlässt."
+
+#: src/social.py:1373
+#, python-brace-format
+msgid "You left the group \"{name}\"."
+msgstr "Du hast die Gruppe \"{name}\" verlassen."
+
+#: src/social.py:1385
+msgid "Only admins can remove members."
+msgstr "Nur Admins können Mitglieder entfernen."
+
+#: src/social.py:1389
+msgid "You cannot remove yourself."
+msgstr "Du kannst dich nicht selbst entfernen."
+
+#: src/social.py:1396
+msgid "Member removed."
+msgstr "Mitglied entfernt."
+
+#: src/social.py:1409
+msgid "Only admins can change roles."
+msgstr "Nur Admins können Rollen ändern."
+
+#: src/social.py:1413
+msgid "You cannot change your own role."
+msgstr "Du kannst deine eigene Rolle nicht ändern."
+
+#: src/social.py:1420
+#, python-brace-format
+msgid "{user} is now a regular member."
+msgstr "{user} ist jetzt ein normales Mitglied."
+
+#: src/social.py:1423
+#, python-brace-format
+msgid "{user} is now an admin."
+msgstr "{user} ist jetzt Admin."
+
+#: src/social.py:1522 src/social.py:1528
+msgid "No file selected."
+msgstr "Keine Datei ausgewählt."
+
+#: src/social.py:1532
+#, python-brace-format
+msgid "File type not allowed. Allowed types: {types}"
+msgstr "Dateityp nicht erlaubt. Erlaubte Typen: {types}"
+
+#: src/social.py:1541
+msgid "File is too large. Maximum size: 50MB"
+msgstr "Datei ist zu groß. Maximale Größe: 50MB"
+
+#: src/social.py:1575
+#, python-brace-format
+msgid "File \"{name}\" uploaded successfully."
+msgstr "Datei \"{name}\" erfolgreich hochgeladen."
+
+#: src/social.py:1598
+msgid "You do not have permission to delete this file."
+msgstr "Du hast keine Berechtigung, diese Datei zu löschen."
+
+#: src/social.py:1610
+msgid "File deleted."
+msgstr "Datei gelöscht."
+
+#: src/social.py:1624
+msgid "Only group admins can create announcements."
+msgstr "Nur Gruppen-Admins können Ankündigungen erstellen."
+
+#: src/social.py:1632 src/social.py:1667
+msgid "Please enter content."
+msgstr "Bitte gib Inhalt ein."
+
+#: src/social.py:1644
+msgid "Announcement created."
+msgstr "Ankündigung erstellt."
+
+#: src/social.py:1659
+msgid "Only group admins can edit announcements."
+msgstr "Nur Gruppen-Admins können Ankündigungen bearbeiten."
+
+#: src/social.py:1674
+msgid "Announcement updated."
+msgstr "Ankündigung aktualisiert."
+
+#: src/social.py:1689
+msgid "Only group admins can delete announcements."
+msgstr "Nur Gruppen-Admins können Ankündigungen löschen."
+
+#: src/social.py:1695
+msgid "Announcement deleted."
+msgstr "Ankündigung gelöscht."
+
+#: src/templates/base.html:95
+msgid "Language"
+msgstr "Sprache"
+
+#: src/templates/base.html:108
+msgid "Toggle theme"
+msgstr "Theme umschalten"
+
+#: src/templates/base.html:153 src/templates/feed.html:400
+#: src/templates/me/me.html:8
+msgid "My Profile"
+msgstr "Mein Profil"
+
+#: src/templates/base.html:160 src/templates/components/sidebar.html:37
+#: src/templates/groups/detail.html:49 src/templates/groups/settings.html:3
+#: src/templates/me/settings.html:3
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: src/templates/base.html:167
+msgid "Logout"
+msgstr "Abmelden"
+
+#: src/templates/auth/login.html:3 src/templates/auth/login.html:8
+#: src/templates/auth/login.html:38 src/templates/auth/register.html:83
+#: src/templates/base.html:173 src/templates/feed.html:32
+#: src/templates/feed.html:271 src/templates/public_profile_page.html:121
+msgid "Login"
+msgstr "Anmelden"
+
+#: src/templates/auth/login.html:67 src/templates/auth/register.html:3
+#: src/templates/auth/register.html:8 src/templates/auth/register.html:76
+#: src/templates/base.html:177
+msgid "Register"
+msgstr "Registrieren"
+
+#: src/templates/base.html:199
+msgid "Back to top"
+msgstr "Nach oben"
+
+#: src/templates/errors/404.html:32 src/templates/errors/500.html:30
+#: src/templates/feed.html:7 src/templates/feed.html:16
+msgid "Feed"
+msgstr "Feed"
+
+#: src/templates/feed.html:20 src/templates/me/edit_post.html:58
+#: src/templates/me/new_post.html:61 src/templates/me/settings.html:161
+msgid "List"
+msgstr "Liste"
+
+#: src/templates/feed.html:23
+msgid "Compact"
+msgstr "Kompakt"
+
+#: src/templates/feed.html:26
+msgid "Cards"
+msgstr "Karten"
+
+#: src/templates/components/sidebar.html:47 src/templates/feed.html:44
+#: src/templates/feed.html:52 src/templates/feed.html:54
+#: src/templates/feed.html:68 src/templates/feed.html:80
+#: src/templates/feed.html:92 src/templates/me/search.html:4
+#: src/templates/me/search.html:9 src/templates/me/search.html:73
+msgid "Search"
+msgstr "Suchen"
+
+#: src/templates/feed.html:63
+msgid "Tag"
+msgstr "Tag"
+
+#: src/templates/feed.html:75
+msgid "Author"
+msgstr "Autor"
+
+#: src/templates/feed.html:87 src/templates/feed.html:197
+#: src/templates/me/edit_post.html:114 src/templates/me/new_post.html:132
+msgid "Group"
+msgstr "Gruppe"
+
+#: src/templates/feed.html:99 src/templates/me/search.html:56
+msgid "From"
+msgstr "Von"
+
+#: src/templates/feed.html:107 src/templates/me/search.html:64
+msgid "To"
+msgstr "Bis"
+
+#: src/templates/feed.html:114 src/templates/me/search.html:76
+msgid "Reset"
+msgstr "Zurücksetzen"
+
+#: src/templates/feed.html:115
+msgid "Apply"
+msgstr "Anwenden"
+
+#: src/templates/feed.html:122
+msgid "Active filters"
+msgstr "Aktive Filter"
+
+#: src/templates/feed.html:149
+msgid "Remove all"
+msgstr "Alle entfernen"
+
+#: src/templates/components/post_card.html:134 src/templates/feed.html:180
+#: src/templates/feed.html:425 src/templates/me/edit_post.html:3
+#: src/templates/me/edit_post.html:8
+msgid "Edit post"
+msgstr "Beitrag bearbeiten"
+
+#: src/templates/feed.html:258
+msgid "Loading comments..."
+msgstr "Kommentare werden geladen..."
+
+#: src/templates/feed.html:271 src/templates/public_profile_page.html:121
+msgid "to comment."
+msgstr "um zu kommentieren."
+
+#: src/templates/feed.html:310
+msgid "No posts found"
+msgstr "Keine Beiträge gefunden"
+
+#: src/templates/feed.html:312
+msgid "No posts match the selected filters."
+msgstr "Keine Beiträge entsprechen den gewählten Filtern."
+
+#: src/templates/feed.html:315
+msgid "Reset filters"
+msgstr "Filter zurücksetzen"
+
+#: src/templates/feed.html:318 src/templates/groups/detail.html:187
+#: src/templates/public_profile.html:100
+msgid "No posts yet"
+msgstr "Noch keine Beiträge"
+
+#: src/templates/feed.html:319
+msgid "No posts have been published yet."
+msgstr "Es wurden noch keine Beiträge veröffentlicht."
+
+#: src/templates/feed.html:323
+msgid "Create first post"
+msgstr "Ersten Beitrag erstellen"
+
+#: src/templates/feed.html:338
+msgid "Trending tags"
+msgstr "Beliebte Tags"
+
+#: src/templates/feed.html:354 src/templates/groups/list.html:3
+#: src/templates/groups/list.html:8
+msgid "My Groups"
+msgstr "Meine Gruppen"
+
+#: src/templates/feed.html:372
+msgid "View all groups"
+msgstr "Alle Gruppen anzeigen"
+
+#: src/templates/feed.html:376
+msgid "You are not in any group yet."
+msgstr "Du bist noch in keiner Gruppe."
+
+#: src/templates/feed.html:380
+msgid "All groups"
+msgstr "Alle Gruppen"
+
+#: src/templates/feed.html:384 src/templates/groups/list.html:13
+msgid "New group"
+msgstr "Neue Gruppe"
+
+#: src/templates/feed.html:392
+msgid "Quick actions"
+msgstr "Schnellaktionen"
+
+#: src/templates/components/sidebar.html:29 src/templates/feed.html:396
+#: src/templates/me/new_post.html:3 src/templates/me/new_post.html:8
+msgid "New post"
+msgstr "Neuer Beitrag"
+
+#: src/templates/components/sidebar.html:63 src/templates/feed.html:404
+#: src/templates/me/bookmarks.html:6 src/templates/me/bookmarks.html:11
+msgid "Bookmarks"
+msgstr "Lesezeichen"
+
+#: src/templates/public_profile.html:41
+msgid "Edit profile"
+msgstr "Profil bearbeiten"
+
+#: src/templates/me/page.html:33 src/templates/public_profile.html:50
+msgid "Overview"
+msgstr "Übersicht"
+
+#: src/templates/public_profile.html:101
+msgid "This user has not published any posts yet."
+msgstr "Dieser Benutzer hat noch keine Beiträge veröffentlicht."
+
+#: src/templates/me/page.html:58 src/templates/public_profile_page.html:131
+msgid "No posts on this page"
+msgstr "Keine Beiträge auf dieser Seite"
+
+#: src/templates/public_profile_page.html:132
+msgid "No posts have been published on this page yet."
+msgstr "Auf dieser Seite wurden noch keine Beiträge veröffentlicht."
+
+#: src/templates/components/widgets.html:38
+#: src/templates/components/widgets.html:60
+#: src/templates/groups/detail.html:131 src/templates/single_post.html:6
+msgid "Post"
+msgstr "Beitrag"
+
+#: src/templates/single_post.html:16
+msgid "Back to feed"
+msgstr "Zurück zum Feed"
+
+#: src/templates/auth/login.html:14 src/templates/auth/register.html:14
+msgid "Username"
+msgstr "Benutzername"
+
+#: src/templates/auth/login.html:14 src/templates/auth/register.html:22
+msgid "Email"
+msgstr "E-Mail"
+
+#: src/templates/auth/login.html:22 src/templates/auth/register.html:30
+msgid "Password"
+msgstr "Passwort"
+
+#: src/templates/auth/login.html:32
+msgid "Remember me"
+msgstr "Angemeldet bleiben"
+
+#: src/templates/auth/login.html:49
+msgid "or"
+msgstr "oder"
+
+#: src/templates/auth/login.html:58
+msgid "Sign in with Keycloak"
+msgstr "Mit Keycloak anmelden"
+
+#: src/templates/auth/login.html:65
+msgid "Don't have an account?"
+msgstr "Noch kein Konto?"
+
+#: src/templates/auth/register.html:62
+msgid "Confirm password"
+msgstr "Passwort bestätigen"
+
+#: src/templates/auth/register.html:81
+msgid "Already have an account?"
+msgstr "Bereits ein Konto?"
+
+#: src/templates/components/confirm_modal.html:13
+msgid "Are you sure?"
+msgstr "Bist du sicher?"
+
+#: src/templates/components/group_announcement_card.html:20
+#: src/templates/groups/announcement_form.html:83
+msgid "Announcement"
+msgstr "Ankündigung"
+
+#: src/templates/components/post_card.html:61 src/templates/me/me.html:94
+msgid "Unpublished"
+msgstr "Unveröffentlicht"
+
+#: src/templates/components/post_card.html:63
+#: src/templates/components/post_card.html:74 src/templates/me/me.html:96
+#: src/templates/me/me.html:106
+msgid "Scheduled"
+msgstr "Geplant"
+
+#: src/templates/components/sidebar.html:33
+msgid "Manage pages"
+msgstr "Seiten verwalten"
+
+#: src/templates/components/sidebar.html:43
+msgid "Organization"
+msgstr "Organisation"
+
+#: src/templates/components/sidebar.html:51 src/templates/groups/files.html:11
+msgid "Groups"
+msgstr "Gruppen"
+
+#: src/templates/components/sidebar.html:59 src/templates/me/archive.html:3
+#: src/templates/me/archive.html:8
+msgid "Archive"
+msgstr "Archiv"
+
+#: src/templates/components/widgets.html:7
+msgid "About me"
+msgstr "Über mich"
+
+#: src/templates/components/widgets.html:32
+msgid "Recent posts"
+msgstr "Neueste Beiträge"
+
+#: src/templates/components/widgets.html:43
+#: src/templates/components/widgets.html:66
+msgid "No posts"
+msgstr "Keine Beiträge"
+
+#: src/templates/components/widgets.html:53
+msgid "Popular posts"
+msgstr "Beliebte Beiträge"
+
+#: src/templates/components/widgets.html:76
+msgid "Statistics"
+msgstr "Statistiken"
+
+#: src/templates/components/widgets.html:81 src/templates/groups/detail.html:39
+#: src/templates/me/archive.html:21
+msgid "Posts"
+msgstr "Beiträge"
+
+#: src/templates/components/widgets.html:85
+msgid "Pages"
+msgstr "Seiten"
+
+#: src/templates/errors/404.html:3 src/templates/errors/404.html:17
+msgid "Page not found"
+msgstr "Seite nicht gefunden"
+
+#: src/templates/errors/404.html:38 src/templates/me/archive.html:10
+#: src/templates/me/bookmarks.html:13 src/templates/me/edit_page.html:10
+#: src/templates/me/edit_post.html:10 src/templates/me/new_post.html:10
+#: src/templates/me/search.html:11 src/templates/me/settings.html:208
+#: src/templates/me/tags.html:10
+msgid "Back"
+msgstr "Zurück"
+
+#: src/templates/errors/500.html:3 src/templates/errors/500.html:17
+msgid "Something went wrong"
+msgstr "Etwas ist schiefgelaufen"
+
+#: src/templates/errors/500.html:36
+msgid "Try again"
+msgstr "Erneut versuchen"
+
+#: src/templates/groups/announcement_form.html:3
+#: src/templates/groups/announcement_form.html:16
+#: src/templates/groups/detail.html:112
+msgid "Edit announcement"
+msgstr "Ankündigung bearbeiten"
+
+#: src/templates/groups/announcement_form.html:3
+#: src/templates/groups/announcement_form.html:16
+msgid "New announcement"
+msgstr "Neue Ankündigung"
+
+#: src/templates/groups/announcement_form.html:29
+#: src/templates/me/edit_post.html:30 src/templates/me/new_post.html:31
+msgid "Content"
+msgstr "Inhalt"
+
+#: src/templates/groups/announcement_form.html:36
+msgid "Write your announcement... (Markdown is supported)"
+msgstr "Schreibe deine Ankündigung... (Markdown wird unterstützt)"
+
+#: src/templates/groups/announcement_form.html:40
+msgid "Markdown is supported: **bold**, *italic*, [links](url), lists, etc."
+msgstr "Markdown wird unterstützt: **fett**, *kursiv*, [Links](url), Listen, etc."
+
+#: src/templates/groups/announcement_form.html:47
+msgid "Border color"
+msgstr "Rahmenfarbe"
+
+#: src/templates/groups/announcement_form.html:97 src/templates/me/tags.html:34
+msgid "Create"
+msgstr "Erstellen"
+
+#: src/templates/groups/create.html:3 src/templates/groups/create.html:58
+#: src/templates/groups/list.html:51
+msgid "Create group"
+msgstr "Gruppe erstellen"
+
+#: src/templates/groups/create.html:12
+msgid "Back to groups"
+msgstr "Zurück zu den Gruppen"
+
+#: src/templates/groups/create.html:16
+msgid "Create new group"
+msgstr "Neue Gruppe erstellen"
+
+#: src/templates/groups/create.html:23 src/templates/groups/settings.html:108
+msgid "Group name"
+msgstr "Gruppenname"
+
+#: src/templates/groups/create.html:32 src/templates/groups/files.html:79
+#: src/templates/groups/settings.html:116 src/templates/me/edit_page.html:28
+msgid "Description"
+msgstr "Beschreibung"
+
+#: src/templates/groups/create.html:36
+msgid "What is this group about?"
+msgstr "Worum geht es in dieser Gruppe?"
+
+#: src/templates/groups/create.html:41 src/templates/groups/settings.html:124
+msgid "Group color"
+msgstr "Gruppenfarbe"
+
+#: src/templates/groups/detail.html:39 src/templates/groups/detail.html:139
+#: src/templates/groups/list.html:34 src/templates/groups/settings.html:187
+msgid "Members"
+msgstr "Mitglieder"
+
+#: src/templates/groups/detail.html:43 src/templates/groups/files.html:5
+#: src/templates/groups/files.html:15 src/templates/groups/files.html:32
+#: src/templates/groups/files.html:33
+msgid "Files"
+msgstr "Dateien"
+
+#: src/templates/groups/detail.html:120
+msgid "Create announcement"
+msgstr "Ankündigung erstellen"
+
+#: src/templates/groups/detail.html:188
+msgid "Share the first post in this group."
+msgstr "Teile den ersten Beitrag in dieser Gruppe."
+
+#: src/templates/groups/detail.html:190 src/templates/me/page.html:62
+msgid "Create post"
+msgstr "Beitrag erstellen"
+
+#: src/templates/groups/files.html:36 src/templates/groups/settings.html:12
+msgid "Back to group"
+msgstr "Zurück zur Gruppe"
+
+#: src/templates/groups/files.html:50
+msgid "Upload file"
+msgstr "Datei hochladen"
+
+#: src/templates/groups/files.html:62
+msgid "Drag file here or"
+msgstr "Datei hierher ziehen oder"
+
+#: src/templates/groups/files.html:62
+msgid "click to select"
+msgstr "klicken zum Auswählen"
+
+#: src/templates/groups/files.html:65
+msgid "Max. 50MB · Allowed:"
+msgstr "Max. 50MB · Erlaubt:"
+
+#: src/templates/groups/files.html:79 src/templates/me/edit_post.html:21
+#: src/templates/me/edit_post.html:135 src/templates/me/new_post.html:21
+#: src/templates/me/new_post.html:118 src/templates/me/new_post.html:132
+#: src/templates/me/new_post.html:153 src/templates/me/new_post.html:182
+#: src/templates/me/new_post.html:231 src/templates/me/new_post.html:260
+#: src/templates/me/settings.html:102 src/templates/me/settings.html:115
+msgid "optional"
+msgstr "optional"
+
+#: src/templates/groups/files.html:80
+msgid "Short description of the file..."
+msgstr "Kurze Beschreibung der Datei..."
+
+#: src/templates/groups/files.html:87
+msgid "Upload"
+msgstr "Hochladen"
+
+#: src/templates/groups/files.html:131
+msgid "Download"
+msgstr "Herunterladen"
+
+#: src/templates/groups/files.html:137 src/templates/me/manage_pages.html:79
+msgid "View"
+msgstr "Ansehen"
+
+#: src/templates/groups/files.html:161
+msgid "No files yet"
+msgstr "Noch keine Dateien"
+
+#: src/templates/groups/files.html:162
+msgid "Upload the first file to share it with the group."
+msgstr "Lade die erste Datei hoch, um sie mit der Gruppe zu teilen."
+
+#: src/templates/groups/list.html:45
+msgid "No groups yet"
+msgstr "Noch keine Gruppen"
+
+#: src/templates/groups/list.html:46
+msgid "Create a group to share private posts with others."
+msgstr "Erstelle eine Gruppe, um private Beiträge mit anderen zu teilen."
+
+#: src/templates/groups/settings.html:16
+msgid "Group settings"
+msgstr "Gruppeneinstellungen"
+
+#: src/templates/groups/settings.html:25 src/templates/me/settings.html:18
+msgid "Cover image"
+msgstr "Titelbild"
+
+#: src/templates/groups/settings.html:48
+msgid "Upload cover image"
+msgstr "Titelbild hochladen"
+
+#: src/templates/groups/settings.html:66
+msgid "Group icon"
+msgstr "Gruppen-Icon"
+
+#: src/templates/groups/settings.html:89
+msgid "Change icon"
+msgstr "Icon ändern"
+
+#: src/templates/groups/settings.html:89
+msgid "Upload icon"
+msgstr "Icon hochladen"
+
+#: src/templates/groups/settings.html:145
+msgid "Save changes"
+msgstr "Änderungen speichern"
+
+#: src/templates/groups/settings.html:153
+msgid "Invite member"
+msgstr "Mitglied einladen"
+
+#: src/templates/groups/settings.html:158
+msgid "Search user..."
+msgstr "Benutzer suchen..."
+
+#: src/templates/groups/settings.html:164
+msgid "Invite"
+msgstr "Einladen"
+
+#: src/templates/groups/settings.html:174
+msgid "Invite all portal users"
+msgstr "Alle Portalbenutzer einladen"
+
+#: src/templates/groups/settings.html:175
+msgid "Invites all registered users to this group"
+msgstr "Lädt alle registrierten Benutzer in diese Gruppe ein"
+
+#: src/templates/groups/settings.html:218
+msgid "Remove admin role"
+msgstr "Adminrolle entfernen"
+
+#: src/templates/groups/settings.html:218
+msgid "Make admin"
+msgstr "Zum Admin machen"
+
+#: src/templates/groups/settings.html:248
+msgid "This action deletes the group"
+msgstr "Diese Aktion löscht die Gruppe"
+
+#: src/templates/groups/settings.html:248
+msgid "including posts, files and memberships. This cannot be undone."
+msgstr "einschließlich Beiträgen, Dateien und Mitgliedschaften. Dies kann nicht rückgängig gemacht werden."
+
+#: src/templates/groups/settings.html:252
+msgid "Delete group permanently"
+msgstr "Gruppe endgültig löschen"
+
+#: src/templates/me/archive.html:21
+msgid "All"
+msgstr "Alle"
+
+#: src/templates/me/archive.html:46
+msgid "Archive is empty"
+msgstr "Archiv ist leer"
+
+#: src/templates/me/archive.html:47
+msgid "Create your first post."
+msgstr "Erstelle deinen ersten Beitrag."
+
+#: src/templates/me/bookmarks.html:27
+msgid "No bookmarks"
+msgstr "Keine Lesezeichen"
+
+#: src/templates/me/bookmarks.html:28
+msgid "Save interesting posts as bookmarks."
+msgstr "Speichere interessante Beiträge als Lesezeichen."
+
+#: src/templates/me/edit_page.html:3
+msgid "edit"
+msgstr "bearbeiten"
+
+#: src/templates/me/edit_page.html:20 src/templates/me/edit_post.html:21
+#: src/templates/me/new_post.html:21
+msgid "Title"
+msgstr "Titel"
+
+#: src/templates/me/edit_post.html:38 src/templates/me/new_post.html:41
+msgid "Bold (Ctrl+B)"
+msgstr "Fett (Strg+B)"
+
+#: src/templates/me/edit_post.html:41 src/templates/me/new_post.html:44
+msgid "Italic (Ctrl+I)"
+msgstr "Kursiv (Strg+I)"
+
+#: src/templates/me/edit_post.html:44 src/templates/me/new_post.html:47
+msgid "Strikethrough"
+msgstr "Durchgestrichen"
+
+#: src/templates/me/edit_post.html:54 src/templates/me/new_post.html:57
+msgid "Code"
+msgstr "Code"
+
+#: src/templates/me/edit_post.html:61 src/templates/me/new_post.html:64
+msgid "Numbered list"
+msgstr "Nummerierte Liste"
+
+#: src/templates/me/edit_post.html:65 src/templates/me/new_post.html:68
+msgid "Insert link"
+msgstr "Link einfügen"
+
+#: src/templates/me/edit_post.html:80 src/templates/me/new_post.html:94
+msgid ""
+"Markdown is supported: **bold**, *italic*, `code`, > quote, - list. Links"
+" are automatically embedded as previews."
+msgstr "Markdown wird unterstützt: **fett**, *kursiv*, `code`, > Zitat, - Liste. Links werden automatisch als Vorschau eingebettet."
+
+#: src/templates/me/edit_post.html:85 src/templates/me/new_post.html:100
+msgid "Where should the post appear?"
+msgstr "Wo soll der Beitrag erscheinen?"
+
+#: src/templates/me/edit_post.html:89 src/templates/me/new_post.html:104
+msgid "On my profile"
+msgstr "Auf meinem Profil"
+
+#: src/templates/me/edit_post.html:93 src/templates/me/new_post.html:108
+msgid "In a group"
+msgstr "In einer Gruppe"
+
+#: src/templates/me/edit_post.html:101 src/templates/me/new_post.html:118
+#: src/templates/me/search.html:44
+msgid "Page"
+msgstr "Seite"
+
+#: src/templates/me/edit_post.html:105 src/templates/me/new_post.html:122
+msgid "No page (overview only)"
+msgstr "Keine Seite (nur Übersicht)"
+
+#: src/templates/me/edit_post.html:118 src/templates/me/new_post.html:136
+msgid "Public (everyone can see)"
+msgstr "Öffentlich (jeder kann es sehen)"
+
+#: src/templates/me/edit_post.html:127 src/templates/me/new_post.html:145
+msgid "Only group members can see this post."
+msgstr "Nur Gruppenmitglieder können diesen Beitrag sehen."
+
+#: src/templates/me/edit_post.html:135 src/templates/me/new_post.html:153
+msgid "Tags"
+msgstr "Tags"
+
+#: src/templates/me/edit_post.html:145 src/templates/me/new_post.html:163
+msgid "Search or create tag..."
+msgstr "Tag suchen oder erstellen..."
+
+#: src/templates/me/edit_post.html:164
+msgid "Published"
+msgstr "Veröffentlicht"
+
+#: src/templates/me/edit_post.html:172 src/templates/me/new_post.html:231
+msgid "Schedule publication"
+msgstr "Veröffentlichung planen"
+
+#: src/templates/me/edit_post.html:175
+msgid "− Edit schedule"
+msgstr "− Zeitplan bearbeiten"
+
+#: src/templates/me/edit_post.html:190 src/templates/me/new_post.html:248
+msgid "The post will only be visible in the feed at the selected time."
+msgstr "Der Beitrag wird erst zur ausgewählten Zeit im Feed sichtbar."
+
+#: src/templates/me/edit_post.html:195 src/templates/me/new_post.html:253
+msgid "Remove schedule"
+msgstr "Zeitplan entfernen"
+
+#: src/templates/me/edit_post.html:204
+msgid "Existing images"
+msgstr "Vorhandene Bilder"
+
+#: src/templates/me/edit_post.html:204
+msgid "Drag & drop to reorder"
+msgstr "Zum Sortieren ziehen"
+
+#: src/templates/me/edit_post.html:225
+msgid "Add new images"
+msgstr "Neue Bilder hinzufügen"
+
+#: src/templates/me/edit_post.html:233
+msgid "Select files"
+msgstr "Dateien auswählen"
+
+#: src/templates/me/manage_pages.html:72
+msgid "Hidden"
+msgstr "Ausgeblendet"
+
+#: src/templates/me/manage_pages.html:97
+msgid "No pages yet."
+msgstr "Noch keine Seiten."
+
+#: src/templates/me/new_post.html:25
+msgid "Title of your post"
+msgstr "Titel deines Beitrags"
+
+#: src/templates/me/new_post.html:76
+msgid "What would you like to share?"
+msgstr "Was möchtest du teilen?"
+
+#: src/templates/me/new_post.html:81
+msgid "Search users..."
+msgstr "Benutzer suchen..."
+
+#: src/templates/me/new_post.html:182
+msgid "Poll"
+msgstr "Umfrage"
+
+#: src/templates/me/new_post.html:191
+msgid "Poll question..."
+msgstr "Umfragefrage..."
+
+#: src/templates/me/new_post.html:207
+msgid "+ Add option"
+msgstr "+ Option hinzufügen"
+
+#: src/templates/me/new_post.html:213
+msgid "Multiple choice"
+msgstr "Mehrfachauswahl"
+
+#: src/templates/me/new_post.html:216
+msgid "Ends"
+msgstr "Endet"
+
+#: src/templates/me/new_post.html:222
+msgid "Remove poll"
+msgstr "Umfrage entfernen"
+
+#: src/templates/me/new_post.html:260
+msgid "Images"
+msgstr "Bilder"
+
+#: src/templates/me/new_post.html:267
+msgid "Drag images here or click"
+msgstr "Bilder hierher ziehen oder klicken"
+
+#: src/templates/me/new_post.html:268
+msgid "PNG, JPG, GIF, WebP allowed"
+msgstr "PNG, JPG, GIF, WebP erlaubt"
+
+#: src/templates/me/new_post.html:280
+msgid "Publish"
+msgstr "Veröffentlichen"
+
+#: src/templates/me/page.html:59
+msgid "Create a new post for this page."
+msgstr "Erstelle einen neuen Beitrag für diese Seite."
+
+#: src/templates/me/search.html:20
+msgid "Search term"
+msgstr "Suchbegriff"
+
+#: src/templates/me/search.html:23
+msgid "Search posts..."
+msgstr "Beiträge suchen..."
+
+#: src/templates/me/search.html:35
+msgid "All tags"
+msgstr "Alle Tags"
+
+#: src/templates/me/search.html:47
+msgid "All pages"
+msgstr "Alle Seiten"
+
+#: src/templates/me/search.html:86
+msgid "result"
+msgstr "Ergebnis"
+
+#: src/templates/me/search.html:86
+msgid "results"
+msgstr "Ergebnisse"
+
+#: src/templates/me/search.html:86
+msgid "found"
+msgstr "gefunden"
+
+#: src/templates/me/search.html:100
+msgid "No results"
+msgstr "Keine Ergebnisse"
+
+#: src/templates/me/search.html:101
+msgid "Try different search terms or filters."
+msgstr "Versuche andere Suchbegriffe oder Filter."
+
+#: src/templates/me/settings.html:7
+msgid "Profile settings"
+msgstr "Profileinstellungen"
+
+#: src/templates/me/settings.html:13
+msgid "Profile"
+msgstr "Profil"
+
+#: src/templates/me/settings.html:33 src/templates/me/settings.html:57
+msgid "Select file"
+msgstr "Datei auswählen"
+
+#: src/templates/me/settings.html:35 src/templates/me/settings.html:59
+msgid "No file selected"
+msgstr "Keine Datei ausgewählt"
+
+#: src/templates/me/settings.html:42
+msgid "Profile picture"
+msgstr "Profilbild"
+
+#: src/templates/me/settings.html:66
+msgid "Display name"
+msgstr "Anzeigename"
+
+#: src/templates/me/settings.html:75
+msgid "Bio"
+msgstr "Bio"
+
+#: src/templates/me/settings.html:77
+msgid "Tell something about yourself..."
+msgstr "Erzähl etwas über dich..."
+
+#: src/templates/me/settings.html:84
+msgid "Design & Colors"
+msgstr "Design & Farben"
+
+#: src/templates/me/settings.html:90
+msgid "Accent color"
+msgstr "Akzentfarbe"
+
+#: src/templates/me/settings.html:102
+msgid "Background color"
+msgstr "Hintergrundfarbe"
+
+#: src/templates/me/settings.html:108 src/templates/me/settings.html:121
+msgid "Enable"
+msgstr "Aktivieren"
+
+#: src/templates/me/settings.html:115
+msgid "Text color"
+msgstr "Textfarbe"
+
+#: src/templates/me/settings.html:128
+msgid "Font"
+msgstr "Schrift"
+
+#: src/templates/me/settings.html:132
+msgid "Default (Inter)"
+msgstr "Standard (Inter)"
+
+#: src/templates/me/settings.html:133
+msgid "Serif (Georgia)"
+msgstr "Serif (Georgia)"
+
+#: src/templates/me/settings.html:134
+msgid "Monospace"
+msgstr "Monospace"
+
+#: src/templates/me/settings.html:135
+msgid "Rounded (Nunito)"
+msgstr "Rund (Nunito)"
+
+#: src/templates/me/settings.html:143
+msgid "Layout"
+msgstr "Layout"
+
+#: src/templates/me/settings.html:147
+msgid "Post layout"
+msgstr "Beitragslayout"
+
+#: src/templates/me/settings.html:173
+msgid "Grid"
+msgstr "Raster"
+
+#: src/templates/me/settings.html:185
+msgid "Masonry"
+msgstr "Masonry"
+
+#: src/templates/me/settings.html:199
+msgid "Timeline"
+msgstr "Zeitleiste"
+
+#: src/templates/me/tags.html:3 src/templates/me/tags.html:8
+msgid "Manage tags"
+msgstr "Tags verwalten"
+
+#: src/templates/me/tags.html:16
+msgid "Create new tag"
+msgstr "Neuen Tag erstellen"
+
+#: src/templates/me/tags.html:21
+msgid "Name"
+msgstr "Name"
+
+#: src/templates/me/tags.html:28
+msgid "Color"
+msgstr "Farbe"
+
+#: src/templates/me/tags.html:41
+msgid "Existing tags"
+msgstr "Vorhandene Tags"
+
+#: src/templates/me/tags.html:60
+msgid "No tags created yet."
+msgstr "Noch keine Tags erstellt."
+
+msgid "Show in feed"
+msgstr "Im Feed anzeigen"
+
+msgid "Transfer admin role"
+msgstr "Admin-Rolle übertragen"
+
+msgid "You are the only admin. Choose a new admin before leaving the group."
+msgstr "Du bist der einzige Admin. Wähle einen neuen Admin, bevor du die Gruppe verlässt."
+
+msgid "New admin"
+msgstr "Neuer Admin"
+
+msgid "Select member"
+msgstr "Mitglied auswählen"
+
+msgid "Delete account"
+msgstr "Konto löschen"
+
+msgid "You can delete your account at any time. This action cannot be undone."
+msgstr "Du kannst dein Konto jederzeit löschen. Diese Aktion kann nicht rückgängig gemacht werden."
+
+msgid "Delete profile and all content"
+msgstr "Profil und alle Inhalte löschen"
+
+msgid "Posts, media, comments, pages and memberships will be deleted."
+msgstr "Beiträge, Medien, Kommentare, Seiten und Mitgliedschaften werden gelöscht."
+
+msgid "Delete profile but keep posts"
+msgstr "Profil löschen, Beiträge behalten"
+
+msgid "Your username will be replaced with a note that the user was deleted."
+msgstr "Dein Benutzername wird durch einen Hinweis ersetzt, dass der Benutzer gelöscht wurde."
+
+msgid "Delete my account"
+msgstr "Mein Konto löschen"
+
+msgid "Are you sure you want to delete your account?"
+msgstr "Bist du sicher, dass du dein Konto löschen möchtest?"
+
+msgid "Please choose how your account should be deleted."
+msgstr "Bitte wähle aus, wie dein Konto gelöscht werden soll."
+
+msgid "Your account has been deleted."
+msgstr "Dein Konto wurde gelöscht."
+
+msgid "Deleted user"
+msgstr "Gelöschter Benutzer"
+
+msgid "This will delete your account. Depending on your selection, your posts may also be deleted. This cannot be undone."
+msgstr "Dies löscht dein Konto. Je nach Auswahl werden auch deine Beiträge gelöscht. Dies kann nicht rückgängig gemacht werden."
+
+msgid "Forgot password?"
+msgstr "Passwort vergessen?"
+
+msgid "Forgot password"
+msgstr "Passwort vergessen"
+
+msgid "Send reset link"
+msgstr "Reset-Link senden"
+
+msgid "Back to login"
+msgstr "Zurück zum Login"
+
+msgid "Reset password"
+msgstr "Passwort zurücksetzen"
+
+msgid "New password"
+msgstr "Neues Passwort"
+
+msgid "Update password"
+msgstr "Passwort aktualisieren"
+
+msgid "If an account exists for this email address, you will receive a password reset link shortly."
+msgstr "Falls ein Konto mit dieser E-Mail-Adresse existiert, erhältst du in Kürze einen Link zum Zurücksetzen deines Passworts."
+
+msgid "Password reset"
+msgstr "Passwort zurücksetzen"
+
+msgid "You requested a password reset. Open the following link to set a new password: {url}\n\nThis link expires after {minutes} minutes."
+msgstr "Du hast das Zurücksetzen deines Passworts angefordert. Öffne den folgenden Link, um ein neues Passwort festzulegen: {url}\n\nDieser Link läuft nach {minutes} Minuten ab."
+
+msgid "This password reset link is invalid or has expired."
+msgstr "Dieser Link zum Zurücksetzen des Passworts ist ungültig oder abgelaufen."
+
+msgid "Your password has been updated. You can now log in."
+msgstr "Dein Passwort wurde aktualisiert. Du kannst dich jetzt anmelden."
+
+msgid "Password requirements:"
+msgstr "Passwort-Anforderungen:"
+
+msgid "At least 12 characters"
+msgstr "Mindestens 12 Zeichen"
+
+msgid "At least one uppercase letter"
+msgstr "Mindestens ein Großbuchstabe"
+
+msgid "At least one lowercase letter"
+msgstr "Mindestens ein Kleinbuchstabe"
+
+msgid "At least one number"
+msgstr "Mindestens eine Zahl"
+
+msgid "At least one special character"
+msgstr "Mindestens ein Sonderzeichen"
+
+msgid "Passwords match"
+msgstr "Passwörter stimmen überein"
+
+msgid "Reset your password"
+msgstr "Setze dein Passwort zurück"
+
+msgid "You requested a password reset for your account."
+msgstr "Du hast das Zurücksetzen deines Passworts für dein Konto angefordert."
+
+msgid "Set new password"
+msgstr "Neues Passwort festlegen"
+
+msgid "This link expires after {minutes} minutes."
+msgstr "Dieser Link läuft nach {minutes} Minuten ab."
+
+msgid "If you did not request this, you can ignore this email."
+msgstr "Wenn du das nicht angefordert hast, kannst du diese E-Mail ignorieren."
+
+msgid "If the button does not work, open this link:"
+msgstr "Wenn der Button nicht funktioniert, öffne diesen Link:"
+
+msgid "You are invited to Chronicle"
+msgstr "Du wurdest zu Chronicle eingeladen"
+
+msgid "You are invited"
+msgstr "Du bist eingeladen"
+
+msgid "You have been invited to join Chronicle. Use the link below to create your account."
+msgstr "Du wurdest eingeladen, Chronicle beizutreten. Nutze den folgenden Link, um dein Konto zu erstellen."
+
+msgid "Invitation code"
+msgstr "Einladungscode"
+
+msgid "Create account"
+msgstr "Konto erstellen"
+
+msgid "This invitation link can be used only once."
+msgstr "Dieser Einladungslink kann nur einmal verwendet werden."
+
+msgid "This invitation link is invalid or has expired."
+msgstr "Dieser Einladungslink ist ungültig oder abgelaufen."
+
+msgid "Invalid invitation code."
+msgstr "Ungültiger Einladungscode."

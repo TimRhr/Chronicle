@@ -1,0 +1,5 @@
+{% from "components/post_card.html" import post_card_own with context %}
+
+{% for post in posts %}
+{{ post_card_own(post, current_user.theme_color) }}
+{% endfor %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Archive') }} - Chronicle{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="font-heading text-2xl font-bold">{{ _('Archive') }}</h1>
+        <a href="{{ url_for('blog.me') }}" class="text-sm text-light-text-muted dark:text-dark-text-muted hover:text-brand-teal transition-colors">
+            {{ _('Back') }}
+        </a>
+    </div>
+    
+    {% if archive_data %}
+    <div class="space-y-6">
+        {% for year in archive_data|sort(reverse=true) %}
+        <div class="glass-card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-heading text-xl font-bold">{{ year }}</h2>
+                <a href="{{ url_for('social.archive_year', year=year) }}" class="text-sm hover:underline" style="color: {{ current_user.theme_color or '#4da9a4' }}">
+                    {{ _('All') }} {{ archive_data[year].values()|map('length')|sum }} {{ _('Posts') }} →
+                </a>
+            </div>
+            
+            <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {% set month_names = ['', 'Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'] %}
+                {% for month in range(1, 13) %}
+                {% set count = archive_data[year].get(month, [])|length %}
+                <a href="{{ url_for('social.archive_month', year=year, month=month) }}" 
+                   class="flex flex-col items-center p-3 rounded-lg border transition-all {% if count > 0 %}border-light-border dark:border-dark-border hover:shadow-md{% else %}border-transparent opacity-40{% endif %}">
+                    <span class="text-sm font-medium">{{ month_names[month] }}</span>
+                    {% if count > 0 %}
+                    <span class="text-xs mt-1 px-2 py-0.5 rounded-full text-white" style="background-color: {{ current_user.theme_color or '#4da9a4' }}">{{ count }}</span>
+                    {% else %}
+                    <span class="text-xs mt-1 text-light-text-muted dark:text-dark-text-muted">-</span>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="glass-card p-12 text-center">
+        <svg class="w-16 h-16 mx-auto mb-4 text-light-text-muted dark:text-dark-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <h3 class="font-heading text-lg font-bold mb-2">{{ _('Archive is empty') }}</h3>
+        <p class="text-light-text-muted dark:text-dark-text-muted">{{ _('Create your first post.') }}</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

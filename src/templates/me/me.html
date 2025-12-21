@@ -1,0 +1,754 @@
+{% extends "base.html" %}
+{% from "components/link_preview.html" import render_link_preview, render_all_previews, youtube_script %}
+{% from "components/post_interactions.html" import reactions_bar %}
+{% from "components/sidebar.html" import profile_sidebar %}
+{% from "components/reactions_js.html" import reactions_scripts %}
+{% from "components/poll.html" import render_poll, poll_voting_js %}
+
+{% block title %}{{ _('My Profile') }} - Chronicle{% endblock %}
+
+{% block content %}
+<!-- Cover Image with Parallax -->
+{% if current_user.cover_image_url %}
+<div class="relative h-56 md:h-72 -mx-4 md:-mx-8 -mt-4 mb-6 cover-container">
+    <div class="absolute inset-x-4 inset-y-2 rounded-2xl overflow-hidden shadow-lg cover-frame" style="border-radius: 1rem;">
+        <img src="{{ current_user.cover_image_url }}" alt="Cover" class="w-full h-full object-cover cover-image scale-110" style="border-radius: 1rem;">
+    </div>
+    <div class="absolute inset-x-4 inset-y-2 rounded-2xl pointer-events-none" style="box-shadow: inset 0 0 30px 10px var(--cover-blur-color, rgba(247,250,248,0.5));"></div>
+    <div class="absolute inset-x-4 bottom-2 h-20 bg-gradient-to-t from-light-bg dark:from-dark-bg to-transparent rounded-b-2xl"></div>
+</div>
+{% endif %}
+
+<div class="max-w-6xl mx-auto px-2 sm:px-4">
+    <div class="grid md:grid-cols-4 gap-4 sm:gap-6">
+        <!-- Sidebar -->
+        {{ profile_sidebar(current_user, pages, active_page='overview', cover_offset=current_user.cover_image_url, enable_avatar_easteregg=true) }}
+        
+        <!-- Main Content -->
+        <main class="md:col-span-3 max-w-2xl">
+
+            {% if pages %}
+            <div class="flex flex-wrap gap-2 mb-4 {% if pages|length > 8 %}max-h-32 overflow-y-auto{% endif %}">
+                <a href="{{ url_for('blog.me') }}"
+                    class="group inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                    style="background: linear-gradient(135deg, {{ current_user.theme_color or '#4da9a4' }}30, {{ current_user.theme_color or '#4da9a4' }}18); border: 1px solid {{ current_user.theme_color or '#4da9a4' }}60;">
+                    <svg class="w-4 h-4 opacity-100 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: {{ current_user.theme_color or '#4da9a4' }}"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    <span class="text-light-text-primary dark:text-dark-text-primary">{{ _('Overview') }}</span>
+                </a>
+                {% for page in pages %}
+                <a href="{{ url_for('blog.view_page', slug=page.slug) }}"
+                    class="group inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                    style="background: linear-gradient(135deg, {{ current_user.theme_color or '#4da9a4' }}15, {{ current_user.theme_color or '#4da9a4' }}08); border: 1px solid {{ current_user.theme_color or '#4da9a4' }}30;">
+                    <svg class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: {{ current_user.theme_color or '#4da9a4' }}"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span class="text-light-text-primary dark:text-dark-text-primary">{{ page.title }}</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            {% if posts %}
+            <!-- Layout: {{ current_user.layout_style or 'list' }} -->
+            <div id="posts-container" class="{% if current_user.layout_style == 'grid' %}grid grid-cols-1 md:grid-cols-2 gap-4{% elif current_user.layout_style == 'masonry' %}columns-1 md:columns-2 gap-4 space-y-4{% elif current_user.layout_style == 'timeline' %}space-y-6{% else %}space-y-4{% endif %}" data-layout="{{ current_user.layout_style or 'list' }}" data-color="{{ current_user.theme_color or '#4da9a4' }}">
+                {% for post in posts %}
+                {% set is_scheduled_future = post.scheduled_at and now is defined and post.scheduled_at > now %}
+                {% set is_unpublished = not post.is_published %}
+                {% set is_dimmed = is_unpublished or is_scheduled_future %}
+                {% if current_user.layout_style == 'timeline' %}
+                <div class="relative pl-8">
+                    <div class="absolute left-0 top-0 bottom-0 w-0.5" style="background-color: {{ current_user.theme_color or '#4da9a4' }}"></div>
+                    <div class="absolute left-0 top-6 w-3 h-3 rounded-full -translate-x-[5px] border-2 bg-light-bg dark:bg-dark-bg" style="border-color: {{ current_user.theme_color or '#4da9a4' }}"></div>
+                {% endif %}
+                <article class="glass-card p-4 sm:p-6 relative {% if current_user.layout_style == 'masonry' %}break-inside-avoid{% endif %}{% if is_dimmed %} dimmed-card{% endif %}" {% if is_dimmed %}style="border-top: 3px solid rgba(251, 191, 36, 0.6);"{% endif %}>
+                    {% if is_unpublished %}
+                    <div class="status-banner relative z-20 flex items-center gap-2 mb-3 -mt-1 px-3 py-2 rounded-lg border border-light-border dark:border-dark-border banner surfaced {% if is_dimmed %}dimmed-bg{% endif %}">
+                        <svg class="w-4 h-4 text-light-text-muted dark:text-dark-text-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div class="text-xs text-light-text-secondary dark:text-dark-text-secondary">
+                            <span class="font-medium">{{ _('Unpublished') }}</span>
+                            {% if is_scheduled_future %}
+                            <span class="text-light-text-muted dark:text-dark-text-muted">· {{ _('Scheduled') }}: {{ post.scheduled_at|format_dt }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% elif is_scheduled_future %}
+                    <div class="status-banner relative z-20 flex items-center gap-2 mb-3 -mt-1 px-3 py-2 rounded-lg border border-light-border dark:border-dark-border banner surfaced {% if is_dimmed %}dimmed-bg{% endif %}">
+                        <svg class="w-4 h-4 text-brand-teal flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <div class="text-xs text-light-text-secondary dark:text-dark-text-secondary">
+                            <span class="font-medium">{{ _('Scheduled') }}</span>
+                            <span class="text-light-text-muted dark:text-dark-text-muted">· {{ post.scheduled_at|format_dt }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="post-header flex items-start justify-between mb-3">
+                        <div>
+                            {% if post.title %}
+                            <h2 class="font-heading text-lg font-bold mb-1">{{ post.title }}</h2>
+                            {% endif %}
+                            <p class="text-xs text-light-text-muted dark:text-dark-text-muted">
+                                {{ (post.scheduled_at or post.published_at or post.created_at)|format_dt }}
+                                {% if post.updated_at and post.created_at and post.updated_at > post.created_at %} <span class="text-xs text-light-text-muted dark:text-dark-text-muted">({{ _('edited') }})</span>{% endif %}
+                                {% if post.page %}
+                                · <a href="{{ url_for('blog.view_page', slug=post.page.slug) }}" class="hover:underline" style="color: {{ current_user.theme_color or '#4da9a4' }}">{{ post.page.title }}</a>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2 relative z-20">
+                            {% if post.group %}
+                            <a href="{{ url_for('social.group_detail', slug=post.group.slug) }}" class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full text-white hover:opacity-90 transition-opacity" style="background-color: {{ post.group.color }}" title="Gruppe: {{ post.group.name }}">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <span class="hidden sm:inline truncate max-w-[120px]">{{ post.group.name }}</span>
+                            </a>
+                            {% endif %}
+                            <a href="{{ url_for('blog.edit_post', post_id=post.id) }}" class="p-2 text-light-text-muted dark:text-dark-text-muted hover:text-brand-teal transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </a>
+                            <form action="{{ url_for('blog.delete_post', post_id=post.id) }}" method="POST" class="delete-post-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="button" class="delete-post-btn p-2 text-light-text-muted dark:text-dark-text-muted hover:text-red-500 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    
+                    {% if post.content %}
+                    <div class="prose dark:prose-invert max-w-none text-light-text-secondary dark:text-dark-text-secondary">
+                        {{ post.content|markdown|safe }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if post.link_previews.count() > 0 %}
+                    <div class="link-previews">
+                        {{ render_all_previews(post.link_previews) }}
+                    </div>
+                    {% endif %}
+                    
+                    {{ render_poll(post) }}
+                    
+                    {% if post.media_items.all()|length > 0 %}
+                    <div class="mt-4">
+                        <div class="image-gallery flex flex-wrap gap-1.5 sm:gap-2 overflow-hidden transition-all duration-300 ease-in-out" style="max-height: 6.5rem;" data-collapsed="true" data-color="{{ current_user.theme_color or '#4da9a4' }}">
+                            {% for media in post.media_items.order_by('order').all() %}
+                            <div class="group relative">
+                                <img src="{{ url_for('static', filename=media.file_path) }}" alt="{{ media.alt_text or 'Bild' }}" class="lightbox-image h-24 w-24 sm:h-32 sm:w-32 object-cover rounded-md cursor-pointer hover:opacity-90 transition-opacity">
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if post.tags.all() %}
+                    <div class="mt-3 flex flex-wrap gap-1.5">
+                        {% for tag in post.tags.all() %}
+                        <a href="{{ url_for('blog.feed', tag=tag.slug) }}" class="text-xs px-2 py-1 rounded-full hover:opacity-80 transition-opacity" style="background-color: {{ tag.color }}20; color: {{ tag.color }}">
+                            #{{ tag.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Reactions & Comments -->
+                    {{ reactions_bar(post, current_user.theme_color) }}
+                </article>
+                {% if current_user.layout_style == 'timeline' %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            
+            <!-- Infinite Scroll Trigger -->
+            {% if has_more %}
+            <div id="infinite-scroll-trigger" class="mt-6 py-4" data-page="{{ current_page + 1 }}">
+                <div id="loading-indicator" class="hidden">
+                    <div class="glass-card p-6 animate-pulse">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 bg-light-border dark:bg-dark-border rounded-full"></div>
+                            <div class="flex-1">
+                                <div class="h-4 bg-light-border dark:bg-dark-border rounded w-32 mb-2"></div>
+                                <div class="h-3 bg-light-border dark:bg-dark-border rounded w-48"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="h-4 bg-light-border dark:bg-dark-border rounded w-full"></div>
+                            <div class="h-4 bg-light-border dark:bg-dark-border rounded w-5/6"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div id="end-of-posts" class="hidden mt-6 text-center text-sm text-light-text-muted dark:text-dark-text-muted">
+                Keine weiteren Beiträge
+            </div>
+            {% else %}
+            <div class="glass-card p-12 text-center">
+                <svg class="w-16 h-16 mx-auto mb-4 text-light-text-muted dark:text-dark-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+                <h3 class="font-heading text-lg font-bold mb-2">Noch keine Beiträge</h3>
+                <p class="text-light-text-muted dark:text-dark-text-muted mb-4">Erstelle deinen ersten Beitrag und teile deine Gedanken.</p>
+                <a href="{{ url_for('blog.new_post') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-md" style="background-color: {{ current_user.theme_color or '#4da9a4' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Ersten Beitrag erstellen
+                </a>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+</div>
+
+<!-- Post Template for JavaScript -->
+<template id="me-post-template">
+    <article class="glass-card p-4 sm:p-6 relative" data-theme-color="">
+        <div class="veil-overlay absolute inset-0 z-10 pointer-events-none bg-white/35 dark:bg-black/25 backdrop-blur-[2px] hidden"></div>
+        <div class="post-header flex items-start justify-between mb-3">
+            <div>
+                <h2 class="post-title font-heading text-lg font-bold mb-1 hidden"></h2>
+                <p class="post-meta text-xs text-light-text-muted dark:text-dark-text-muted"></p>
+            </div>
+            <div class="flex items-center gap-2 relative z-20">
+                <a class="edit-link p-2 text-light-text-muted dark:text-dark-text-muted hover:text-brand-teal transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                </a>
+            </div>
+        </div>
+        <div class="post-content prose dark:prose-invert max-w-none text-light-text-secondary dark:text-dark-text-secondary hidden">
+            <div class="post-content-body"></div>
+        </div>
+        <div class="link-previews-container mt-4 hidden"></div>
+        <div class="media-container mt-4 hidden"></div>
+        <!-- Reactions -->
+        <div class="post-reactions flex items-center gap-2 sm:gap-4 pt-3 border-t border-light-border dark:border-dark-border mt-3" data-is-owner="true">
+            <div class="reactions-summary flex items-center gap-2 text-sm text-light-text-muted dark:text-dark-text-muted"></div>
+            <div class="flex-1"></div>
+            <button type="button" class="bookmark-btn p-1.5 rounded-md hover:bg-light-bg dark:hover:bg-dark-bg transition-colors" title="{{ _('Bookmark') }}">
+                <svg class="w-5 h-5 bookmark-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+            </button>
+            <button type="button" class="comment-toggle-btn p-1.5 rounded-md hover:bg-light-bg dark:hover:bg-dark-bg transition-colors flex items-center gap-1" title="{{ _('Comments') }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                <span class="comment-count text-xs text-light-text-muted dark:text-dark-text-muted">0</span>
+            </button>
+        </div>
+        <!-- Comments Section -->
+        <div class="comments-section hidden mt-4 pt-4 border-t border-light-border dark:border-dark-border">
+            <div class="comments-list space-y-3 mb-4"></div>
+            <form class="comment-form flex gap-2">
+                <input type="text" class="comment-input flex-1 min-w-0 px-3 py-2 text-sm rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg focus:outline-none focus:ring-2 focus:ring-brand-teal" placeholder="{{ _('Write a comment...') }}">
+                <button type="submit" class="comment-submit-btn flex-shrink-0 p-2 sm:px-4 sm:py-2 text-sm font-medium text-white rounded-md" title="{{ _('Send') }}">
+                    <svg class="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                    <span class="hidden sm:inline">{{ _('Send') }}</span>
+                </button>
+            </form>
+        </div>
+    </article>
+</template>
+
+<!-- Timeline Wrapper Template -->
+<template id="timeline-wrapper-template">
+    <div class="relative pl-8">
+        <div class="timeline-line absolute left-0 top-0 bottom-0 w-0.5"></div>
+        <div class="timeline-dot absolute left-0 top-6 w-3 h-3 rounded-full -translate-x-[5px] border-2 bg-light-bg dark:bg-dark-bg"></div>
+    </div>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    @keyframes meAvatarFlutter {
+        0% { transform: translate(0, 0) rotate(0deg); }
+        20% { transform: translate(-1px, 1px) rotate(-1deg); }
+        40% { transform: translate(1px, -1px) rotate(1deg); }
+        60% { transform: translate(-1px, 0px) rotate(0.6deg); }
+        80% { transform: translate(1px, 1px) rotate(-0.6deg); }
+        100% { transform: translate(0, 0) rotate(0deg); }
+    }
+
+    .me-avatar-flutter {
+        animation: meAvatarFlutter 260ms linear 1;
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Bio expand on hover
+        const bioText = document.getElementById('bio-text');
+        const bioContainer = document.getElementById('bio-container');
+        
+        if (bioText && bioContainer) {
+            const collapsedHeight = '7.5em';
+            const fullHeight = bioText.scrollHeight + 'px';
+            
+            const isTruncated = bioText.scrollHeight > bioText.clientHeight;
+            
+            if (isTruncated) {
+                bioContainer.style.cursor = 'pointer';
+                bioContainer.addEventListener('mouseenter', function() {
+                    bioText.style.maxHeight = fullHeight;
+                });
+                bioContainer.addEventListener('mouseleave', function() {
+                    bioText.style.maxHeight = collapsedHeight;
+                });
+            }
+        }
+        
+        // Image gallery expand/collapse
+        initMeImageGalleries();
+        setTimeout(initMeImageGalleries, 500);
+
+        const avatarEl = document.getElementById('me-sidebar-avatar');
+        if (avatarEl) {
+            const fallbackUrl = '/static/assets/pix.png';
+            let pressTimer = null;
+            let active = false;
+            let restoreTimer = null;
+            const isImg = avatarEl.tagName && avatarEl.tagName.toLowerCase() === 'img';
+            const originalSrc = isImg ? avatarEl.getAttribute('src') : null;
+            const originalHtml = !isImg ? avatarEl.innerHTML : null;
+
+            async function pixelateToDataUrl(src) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => {
+                        try {
+                            const w = img.naturalWidth || 0;
+                            const h = img.naturalHeight || 0;
+                            if (!w || !h) {
+                                reject(new Error('invalid-dimensions'));
+                                return;
+                            }
+                            const factor = 14;
+                            const sw = Math.max(16, Math.floor(w / factor));
+                            const sh = Math.max(16, Math.floor(h / factor));
+                            const small = document.createElement('canvas');
+                            small.width = sw;
+                            small.height = sh;
+                            const sctx = small.getContext('2d');
+                            if (!sctx) {
+                                reject(new Error('no-context'));
+                                return;
+                            }
+                            sctx.imageSmoothingEnabled = true;
+                            sctx.clearRect(0, 0, sw, sh);
+                            sctx.drawImage(img, 0, 0, sw, sh);
+
+                            const big = document.createElement('canvas');
+                            big.width = w;
+                            big.height = h;
+                            const bctx = big.getContext('2d');
+                            if (!bctx) {
+                                reject(new Error('no-context'));
+                                return;
+                            }
+                            bctx.imageSmoothingEnabled = false;
+                            bctx.clearRect(0, 0, w, h);
+                            bctx.drawImage(small, 0, 0, sw, sh, 0, 0, w, h);
+                            resolve(big.toDataURL('image/png'));
+                        } catch (e) {
+                            reject(e);
+                        }
+                    };
+                    img.onerror = () => reject(new Error('load-failed'));
+                    img.src = src;
+                });
+            }
+
+            async function triggerEasterEgg() {
+                if (active) return;
+                active = true;
+                if (restoreTimer) {
+                    clearTimeout(restoreTimer);
+                    restoreTimer = null;
+                }
+
+                function showPix() {
+                    if (isImg) {
+                        avatarEl.src = fallbackUrl;
+                        avatarEl.style.imageRendering = 'pixelated';
+                    } else {
+                        avatarEl.innerHTML = '<img src="' + fallbackUrl + '" alt="Avatar" class="w-full h-full rounded-full object-cover" style="image-rendering: pixelated;">';
+                    }
+                }
+
+                function restoreOriginal() {
+                    if (isImg) {
+                        if (originalSrc) avatarEl.src = originalSrc;
+                        avatarEl.style.imageRendering = '';
+                    } else {
+                        if (originalHtml !== null) avatarEl.innerHTML = originalHtml;
+                    }
+                }
+
+                if (isImg) {
+                    let nextSrc = fallbackUrl;
+                    try {
+                        if (originalSrc) {
+                            nextSrc = await pixelateToDataUrl(originalSrc);
+                        }
+                    } catch (e) {
+                        nextSrc = fallbackUrl;
+                    }
+                    avatarEl.src = nextSrc;
+                    avatarEl.style.imageRendering = 'pixelated';
+                } else {
+                    avatarEl.innerHTML = '<img src="' + fallbackUrl + '" alt="Avatar" class="w-full h-full rounded-full object-cover" style="image-rendering: pixelated;">';
+                }
+
+                restoreTimer = setTimeout(() => {
+                    showPix();
+                    avatarEl.classList.add('me-avatar-flutter');
+                    setTimeout(() => {
+                        avatarEl.classList.remove('me-avatar-flutter');
+                        restoreOriginal();
+                        active = false;
+                    }, 260);
+                }, 5000);
+            }
+
+            function startPress() {
+                if (pressTimer || active) return;
+                pressTimer = setTimeout(() => {
+                    pressTimer = null;
+                    triggerEasterEgg();
+                }, 1200);
+            }
+
+            function cancelPress() {
+                if (pressTimer) {
+                    clearTimeout(pressTimer);
+                    pressTimer = null;
+                }
+            }
+
+            avatarEl.style.cursor = 'pointer';
+            avatarEl.addEventListener('mousedown', startPress);
+            avatarEl.addEventListener('touchstart', startPress, { passive: true });
+            avatarEl.addEventListener('mouseup', cancelPress);
+            avatarEl.addEventListener('mouseleave', cancelPress);
+            avatarEl.addEventListener('touchend', cancelPress);
+            avatarEl.addEventListener('touchcancel', cancelPress);
+        }
+    });
+    
+    function initMeImageGalleries() {
+        document.querySelectorAll('.image-gallery').forEach(function(gallery) {
+            // Skip if already initialized
+            if (gallery.dataset.initialized === 'true') return;
+            
+            const totalImages = gallery.querySelectorAll('.group').length;
+            
+            // Only show expand button if more than 3 images
+            if (totalImages <= 3) return;
+            
+            const isMobile = window.innerWidth < 640;
+            const imageSize = isMobile ? 102 : 136;
+            const containerWidth = gallery.offsetWidth || 300;
+            const imagesPerRow = Math.max(1, Math.floor(containerWidth / imageSize));
+            const hiddenCount = totalImages - imagesPerRow;
+            
+            if (hiddenCount <= 0) return;
+            
+            gallery.dataset.initialized = 'true';
+            
+            const color = gallery.dataset.color || '#4da9a4';
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'gallery-expand-btn mt-2 text-sm font-medium transition-colors flex items-center gap-1';
+            btn.style.color = color;
+            btn.innerHTML = `<span class="expand-text">${window.I18N.show_more} (${hiddenCount} ${window.I18N.more})</span><svg class="w-4 h-4 expand-icon transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>`;
+            
+            const moreText = `${window.I18N.show_more} (${hiddenCount} ${window.I18N.more})`;
+            gallery.parentNode.appendChild(btn);
+            
+            btn.addEventListener('click', function() {
+                const isCollapsed = gallery.dataset.collapsed === 'true';
+                const textSpan = btn.querySelector('.expand-text');
+                const icon = btn.querySelector('.expand-icon');
+                
+                if (isCollapsed) {
+                    gallery.style.maxHeight = 'none';
+                    gallery.dataset.collapsed = 'false';
+                    textSpan.textContent = window.I18N.show_less;
+                    icon.style.transform = 'rotate(180deg)';
+                } else {
+                    gallery.style.maxHeight = window.innerWidth < 640 ? '6.5rem' : '8.5rem';
+                    gallery.dataset.collapsed = 'true';
+                    textSpan.textContent = moreText;
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            });
+        });
+    }
+    
+    // YouTube click-to-play - open in new tab (most reliable)
+    document.querySelectorAll('.youtube-preview').forEach(function(preview) {
+        preview.addEventListener('click', function() {
+            const videoId = this.dataset.videoId;
+            window.open('https://www.youtube.com/watch?v=' + videoId, '_blank');
+        });
+    });
+    
+    // Create post element from template
+    function createMePostElement(post, layout, color) {
+        const template = document.getElementById('me-post-template');
+        const article = template.content.cloneNode(true).querySelector('article');
+
+        // Accent color for dynamic UI bits (e.g., collapse toggle)
+        article.dataset.themeColor = color || '#4da9a4';
+        
+        // Add masonry class if needed
+        if (layout === 'masonry') {
+            article.classList.add('break-inside-avoid');
+        }
+        
+        // Set post ID
+        article.querySelector('.post-reactions').dataset.postId = post.id;
+        
+        // Title
+        const titleEl = article.querySelector('.post-title');
+        if (post.title) {
+            titleEl.textContent = post.title;
+            titleEl.classList.remove('hidden');
+        }
+        
+        // Dimming for unpublished/scheduled posts
+        const isDimmed = post.is_unpublished || post.is_scheduled_future;
+        if (isDimmed) {
+            article.classList.add('opacity-40');
+            article.style.borderTop = '3px solid rgba(251, 191, 36, 0.6)';
+        }
+        
+        // Unpublished banner
+        if (post.is_unpublished || post.is_scheduled_future) {
+            const labelUnpublished = (window.I18N && window.I18N.unpublished) || 'Unpublished';
+            const labelScheduled = (window.I18N && window.I18N.scheduled) || 'Scheduled';
+            const banner = document.createElement('div');
+            banner.className = 'relative z-20 flex items-center gap-2 mb-3 -mt-1 px-3 py-2 rounded-lg border border-light-border dark:border-dark-border bg-light-bg/60 dark:bg-dark-bg/60';
+            if (post.is_unpublished) {
+                banner.innerHTML = `
+                    <svg class="w-4 h-4 text-light-text-muted dark:text-dark-text-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div class="text-xs text-light-text-secondary dark:text-dark-text-secondary">
+                        <span class="font-medium">${labelUnpublished}</span>
+                        ${post.is_scheduled_future ? `<span class="text-light-text-muted dark:text-dark-text-muted">· ${labelScheduled}: ${post.created_at}</span>` : ''}
+                    </div>
+                `;
+            } else {
+                banner.innerHTML = `
+                    <svg class="w-4 h-4 text-brand-teal flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <div class="text-xs text-light-text-secondary dark:text-dark-text-secondary">
+                        <span class="font-medium">${labelScheduled}</span>
+                        <span class="text-light-text-muted dark:text-dark-text-muted">· ${labelScheduled}: ${post.created_at}</span>
+                    </div>
+                `;
+            }
+            article.insertAdjacentElement('afterbegin', banner);
+        }
+
+        // Meta (date + page link)
+        let metaText = post.created_at;
+        if (post.is_edited) {
+            metaText += ' <span class="text-xs text-light-text-muted dark:text-dark-text-muted">(bearbeitet)</span>';
+        }
+        if (post.page_title) {
+            metaText += ` · <a href="/me/page/${post.page_slug}" class="hover:underline" style="color: ${color}">${post.page_title}</a>`;
+        }
+        article.querySelector('.post-meta').innerHTML = metaText;
+
+        // Group badge (if group post)
+        if (post.group_name && post.group_slug && post.group_color) {
+            const meta = article.querySelector('.post-meta');
+            const badge = document.createElement('a');
+            badge.href = '/groups/' + encodeURIComponent(post.group_slug);
+            badge.className = 'inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full text-white hover:opacity-90 transition-opacity ml-2';
+            badge.style.backgroundColor = post.group_color;
+            badge.title = 'Gruppe: ' + post.group_name;
+            badge.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span class="hidden sm:inline truncate max-w-[120px]">' + post.group_name + '</span>';
+            if (meta) meta.appendChild(badge);
+        }
+        
+        // Edit link
+        article.querySelector('.edit-link').href = `/me/posts/${post.id}/edit`;
+        
+        // Content
+        if (post.content) {
+            const contentEl = article.querySelector('.post-content');
+            const bodyEl = contentEl ? contentEl.querySelector('.post-content-body') : null;
+            if (bodyEl) {
+                bodyEl.innerHTML = post.content;
+            }
+            contentEl.classList.remove('hidden');
+        }
+        
+        // Link Previews
+        if (post.link_previews && post.link_previews.length > 0) {
+            const previewsContainer = article.querySelector('.link-previews-container');
+            previewsContainer.classList.remove('hidden');
+            let previewsHtml = '';
+            post.link_previews.forEach(preview => {
+                if (preview.embed_type === 'youtube') {
+                    previewsHtml += `
+                        <div class="youtube-preview my-4 relative aspect-video rounded-lg overflow-hidden shadow-md cursor-pointer group" data-video-id="${preview.embed_id}">
+                            <img src="https://img.youtube.com/vi/${preview.embed_id}/maxresdefault.jpg" 
+                                 alt="${preview.title || 'YouTube Video'}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.src='https://img.youtube.com/vi/${preview.embed_id}/hqdefault.jpg'">
+                            <div class="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                                <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                                    <svg class="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                </div>
+                            </div>
+                            ${preview.title ? `<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+                                <p class="text-white text-sm font-medium line-clamp-2">${preview.title}</p>
+                                <p class="text-white/70 text-xs mt-1">YouTube</p>
+                            </div>` : ''}
+                        </div>`;
+                } else if (preview.embed_type === 'link' && (preview.title || preview.description)) {
+                    previewsHtml += `
+                        <a href="${preview.url}" target="_blank" rel="noopener noreferrer" class="block my-4 no-underline group">
+                            <div class="flex bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg overflow-hidden hover:border-brand-teal transition-colors">
+                                ${preview.image_url ? `<div class="flex-shrink-0 w-32 h-32 md:w-40 md:h-28">
+                                    <img src="${preview.image_url}" alt="" class="w-full h-full object-cover" loading="lazy" onerror="this.parentElement.style.display='none'">
+                                </div>` : ''}
+                                <div class="flex-1 p-3 min-w-0">
+                                    ${preview.site_name ? `<p class="text-xs text-light-text-muted dark:text-dark-text-muted uppercase tracking-wide mb-1">${preview.site_name}</p>` : ''}
+                                    ${preview.title ? `<h4 class="font-medium text-light-text-primary dark:text-dark-text-primary group-hover:text-brand-teal transition-colors line-clamp-2 mb-1">${preview.title}</h4>` : ''}
+                                    ${preview.description ? `<p class="text-sm text-light-text-secondary dark:text-dark-text-secondary line-clamp-2">${preview.description}</p>` : ''}
+                                </div>
+                            </div>
+                        </a>`;
+                }
+            });
+            previewsContainer.innerHTML = previewsHtml;
+            
+            // Add click handlers for YouTube previews
+            previewsContainer.querySelectorAll('.youtube-preview').forEach(preview => {
+                preview.addEventListener('click', function() {
+                    const videoId = this.dataset.videoId;
+                    window.open('https://www.youtube.com/watch?v=' + videoId, '_blank');
+                });
+            });
+        }
+        
+        // Media
+        if (post.media_items && post.media_items.length > 0) {
+            const mediaContainer = article.querySelector('.media-container');
+            mediaContainer.classList.remove('hidden');
+            let galleryHtml = `<div class="image-gallery flex flex-wrap gap-2 overflow-hidden transition-all duration-300 ease-in-out" style="max-height: 8.5rem;" data-collapsed="true" data-color="${color}">`;
+            post.media_items.forEach(media => {
+                galleryHtml += `<div class="group relative">
+                    <img src="/static/${media.file_path}" alt="${media.alt_text || 'Bild'}" class="lightbox-image h-32 w-32 object-cover rounded-md cursor-pointer">
+                    <div class="invisible group-hover:visible opacity-0 group-hover:opacity-100 absolute left-0 top-full mt-2 z-50 bg-light-surface dark:bg-dark-surface p-2 rounded-lg shadow-2xl border border-light-border dark:border-dark-border transition-all duration-200 pointer-events-none">
+                        <img src="/static/${media.file_path}" alt="${media.alt_text || 'Bild'}" class="max-h-80 max-w-80 object-contain rounded-md">
+                    </div>
+                </div>`;
+            });
+            galleryHtml += '</div>';
+            mediaContainer.innerHTML = galleryHtml;
+        }
+        
+        // Theme color for submit button
+        article.querySelector('.comment-submit-btn').style.backgroundColor = color;
+        
+        return article;
+    }
+    
+    // Infinite Scroll
+    const postsContainer = document.getElementById('posts-container');
+    let isLoading = false;
+    let hasMore = {{ 'true' if has_more else 'false' }};
+    
+    function loadMorePosts() {
+        if (isLoading || !hasMore || !postsContainer) return;
+        
+        const trigger = document.getElementById('infinite-scroll-trigger');
+        if (!trigger) return;
+        
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const nextPage = parseInt(trigger.dataset.page);
+        const layout = postsContainer.dataset.layout || 'list';
+        const color = postsContainer.dataset.color || '#4da9a4';
+        
+        isLoading = true;
+        loadingIndicator.classList.remove('hidden');
+        
+        fetch('/api/posts?page=' + nextPage)
+            .then(res => res.json())
+            .then(data => {
+                data.posts.forEach(post => {
+                    const article = createMePostElement(post, layout, color);
+                    
+                    // Timeline wrapper
+                    if (layout === 'timeline') {
+                        const wrapperTemplate = document.getElementById('timeline-wrapper-template');
+                        const wrapper = wrapperTemplate.content.cloneNode(true).querySelector('div');
+                        wrapper.querySelector('.timeline-line').style.backgroundColor = color;
+                        wrapper.querySelector('.timeline-dot').style.borderColor = color;
+                        wrapper.appendChild(article);
+                        postsContainer.appendChild(wrapper);
+                    } else {
+                        postsContainer.appendChild(article);
+                    }
+                });
+                
+                // Reinitialize interactions
+                setTimeout(() => {
+                    document.querySelectorAll('article').forEach(article => {
+                        initArticleInteractions(article);
+                    });
+                }, 100);
+                
+                if (data.has_more) {
+                    trigger.dataset.page = nextPage + 1;
+                } else {
+                    hasMore = false;
+                    trigger.remove();
+                    document.getElementById('end-of-posts').classList.remove('hidden');
+                }
+                
+                isLoading = false;
+                loadingIndicator.classList.add('hidden');
+            })
+            .catch(err => {
+                console.error('Error loading posts:', err);
+                isLoading = false;
+                loadingIndicator.classList.add('hidden');
+            });
+    }
+    
+    // Intersection Observer for infinite scroll
+    const scrollTrigger = document.getElementById('infinite-scroll-trigger');
+    if (scrollTrigger) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    loadMorePosts();
+                }
+            });
+        }, { rootMargin: '200px' });
+        
+        observer.observe(scrollTrigger);
+    }
+    
+    // Delete post with confirm modal
+    document.querySelectorAll('.delete-post-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const form = this.closest('.delete-post-form');
+            window.confirmModal.show({
+                title: window.I18N.delete_post,
+                message: window.I18N.delete_post_confirm,
+                confirmText: window.I18N.delete,
+                confirmClass: 'bg-red-600 hover:bg-red-700',
+                form: form
+            });
+        });
+    });
+</script>
+{{ poll_voting_js() }}
+{{ reactions_scripts(current_user.theme_color, current_user.id) }}
+{% endblock %}
+

@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Settings') }} - Chronicle{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <h1 class="font-heading text-2xl font-bold mb-6">{{ _('Profile settings') }}</h1>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <!-- Profile Section -->
+        <div class="glass-card p-6">
+            <h2 class="font-heading text-lg font-bold mb-4">{{ _('Profile') }}</h2>
+            
+            <!-- Cover Image -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-2">
+                    {{ _('Cover image') }}
+                </label>
+                <div class="relative">
+                    <div id="cover-preview-container" class="w-full h-32 rounded-lg overflow-hidden bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border">
+                        {% if current_user.cover_image_url %}
+                            <img id="cover-preview" src="{{ current_user.cover_image_url }}" alt="Cover" class="w-full h-full object-cover">
+                        {% else %}
+                            <div id="cover-placeholder" class="w-full h-full flex items-center justify-center text-light-text-muted dark:text-dark-text-muted">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>
+                            <img id="cover-preview" src="" alt="Cover" class="w-full h-full object-cover hidden">
+                        {% endif %}
+                    </div>
+                    <input type="file" id="cover-input" name="cover_image" accept="image/*" class="hidden">
+                    <button type="button" onclick="document.getElementById('cover-input').click()" class="mt-2 px-4 py-2 text-sm font-medium text-white rounded-md bg-brand-teal hover:bg-brand-blue transition-colors">
+                        {{ _('Select file') }}
+                    </button>
+                    <span id="cover-filename" class="ml-2 text-sm text-light-text-muted dark:text-dark-text-muted">{{ _('No file selected') }}</span>
+                </div>
+            </div>
+            
+            <!-- Avatar -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-2">
+                    {{ _('Profile picture') }}
+                </label>
+                <div class="flex items-center gap-4">
+                    <div id="avatar-preview-container">
+                        {% if current_user.avatar_url %}
+                            <img id="avatar-preview" src="{{ current_user.avatar_url }}" alt="Avatar" class="w-16 h-16 rounded-full object-cover border-2" style="border-color: {{ current_user.theme_color or '#4da9a4' }}">
+                        {% else %}
+                            <div id="avatar-placeholder" class="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white" style="background-color: {{ current_user.theme_color or '#4da9a4' }}">
+                                {{ (current_user.display_name or current_user.username)[0]|upper }}
+                            </div>
+                            <img id="avatar-preview" src="" alt="Avatar" class="w-16 h-16 rounded-full object-cover border-2 hidden" style="border-color: {{ current_user.theme_color or '#4da9a4' }}">
+                        {% endif %}
+                    </div>
+                    <input type="file" id="avatar-input" name="avatar" accept="image/*" class="hidden">
+                    <button type="button" onclick="document.getElementById('avatar-input').click()" class="px-4 py-2 text-sm font-medium text-white rounded-md bg-brand-teal hover:bg-brand-blue transition-colors">
+                        {{ _('Select file') }}
+                    </button>
+                    <span id="avatar-filename" class="ml-2 text-sm text-light-text-muted dark:text-dark-text-muted">{{ _('No file selected') }}</span>
+                </div>
+            </div>
+            
+            <!-- Display Name -->
+            <div class="mb-4">
+                <label for="display_name" class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">
+                    {{ _('Display name') }}
+                </label>
+                <input type="text" id="display_name" name="display_name" value="{{ current_user.display_name or '' }}" placeholder="{{ current_user.username }}"
+                    class="w-full px-4 py-2 rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent">
+            </div>
+            
+            <!-- Bio -->
+            <div>
+                <label for="bio" class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">
+                    {{ _('Bio') }}
+                </label>
+                <textarea id="bio" name="bio" rows="3" placeholder="{{ _('Tell something about yourself...') }}"
+                    class="w-full px-4 py-2 rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent resize-none">{{ current_user.bio or '' }}</textarea>
+            </div>
+        </div>
+        
+        <!-- Theme & Design Section -->
+        <div class="glass-card p-6">
+            <h2 class="font-heading text-lg font-bold mb-4">{{ _('Design & Colors') }}</h2>
+            
+            <div class="grid md:grid-cols-2 gap-4">
+                <!-- Theme Color -->
+                <div>
+                    <label for="theme_color" class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">
+                        {{ _('Accent color') }}
+                    </label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" id="theme_color" name="theme_color" value="{{ current_user.theme_color or '#4da9a4' }}"
+                            class="w-12 h-10 rounded-md border border-light-border dark:border-dark-border cursor-pointer">
+                        <span id="theme_color_value" class="text-sm text-light-text-muted dark:text-dark-text-muted">{{ current_user.theme_color or '#4da9a4' }}</span>
+                    </div>
+                </div>
+                
+                <!-- Font Family -->
+                <div>
+                    <label for="font_family" class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">
+                        {{ _('Font') }}
+                    </label>
+                    <select id="font_family" name="font_family"
+                        class="w-full px-4 py-2 rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent">
+                        <option value="default" {% if current_user.font_family == 'default' %}selected{% endif %}>{{ _('Default (Inter)') }}</option>
+                        <option value="serif" {% if current_user.font_family == 'serif' %}selected{% endif %}>{{ _('Serif (Georgia)') }}</option>
+                        <option value="mono" {% if current_user.font_family == 'mono' %}selected{% endif %}>{{ _('Monospace') }}</option>
+                        <option value="rounded" {% if current_user.font_family == 'rounded' %}selected{% endif %}>{{ _('Rounded (Nunito)') }}</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Layout Section -->
+        <div class="glass-card p-6">
+            <h2 class="font-heading text-lg font-bold mb-4">{{ _('Layout') }}</h2>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-3">
+                    {{ _('Post layout') }}
+                </label>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="layout_style" value="list" {% if current_user.layout_style == 'list' or not current_user.layout_style %}checked{% endif %} class="sr-only peer">
+                        <div class="layout-option-card p-3 rounded-lg border-2 border-light-border dark:border-dark-border peer-checked:border-brand-teal transition-colors">
+                            <div class="space-y-1 mb-2">
+                                <div class="h-2 bg-light-bg dark:bg-dark-bg rounded w-full"></div>
+                                <div class="h-2 bg-light-bg dark:bg-dark-bg rounded w-3/4"></div>
+                            </div>
+                            <div class="space-y-1">
+                                <div class="h-2 bg-light-bg dark:bg-dark-bg rounded w-full"></div>
+                                <div class="h-2 bg-light-bg dark:bg-dark-bg rounded w-3/4"></div>
+                            </div>
+                            <p class="text-xs text-center mt-2 text-light-text-muted dark:text-dark-text-muted">{{ _('List') }}</p>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="layout_style" value="grid" {% if current_user.layout_style == 'grid' %}checked{% endif %} class="sr-only peer">
+                        <div class="layout-option-card p-3 rounded-lg border-2 border-light-border dark:border-dark-border peer-checked:border-brand-teal transition-colors">
+                            <div class="grid grid-cols-2 gap-1 mb-2">
+                                <div class="h-4 bg-light-bg dark:bg-dark-bg rounded"></div>
+                                <div class="h-4 bg-light-bg dark:bg-dark-bg rounded"></div>
+                                <div class="h-4 bg-light-bg dark:bg-dark-bg rounded"></div>
+                                <div class="h-4 bg-light-bg dark:bg-dark-bg rounded"></div>
+                            </div>
+                            <p class="text-xs text-center mt-2 text-light-text-muted dark:text-dark-text-muted">{{ _('Grid') }}</p>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="layout_style" value="masonry" {% if current_user.layout_style == 'masonry' %}checked{% endif %} class="sr-only peer">
+                        <div class="layout-option-card p-3 rounded-lg border-2 border-light-border dark:border-dark-border peer-checked:border-brand-teal transition-colors">
+                            <div class="grid grid-cols-2 gap-1 mb-2">
+                                <div class="h-6 bg-light-bg dark:bg-dark-bg rounded"></div>
+                                <div class="h-4 bg-light-bg dark:bg-dark-bg rounded"></div>
+                                <div class="h-3 bg-light-bg dark:bg-dark-bg rounded"></div>
+                                <div class="h-5 bg-light-bg dark:bg-dark-bg rounded"></div>
+                            </div>
+                            <p class="text-xs text-center mt-2 text-light-text-muted dark:text-dark-text-muted">{{ _('Masonry') }}</p>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="layout_style" value="timeline" {% if current_user.layout_style == 'timeline' %}checked{% endif %} class="sr-only peer">
+                        <div class="layout-option-card p-3 rounded-lg border-2 border-light-border dark:border-dark-border peer-checked:border-brand-teal transition-colors">
+                            <div class="flex gap-1 mb-2">
+                                <div class="w-0.5 bg-brand-teal"></div>
+                                <div class="flex-1 space-y-1">
+                                    <div class="h-3 bg-light-bg dark:bg-dark-bg rounded"></div>
+                                    <div class="h-3 bg-light-bg dark:bg-dark-bg rounded"></div>
+                                    <div class="h-3 bg-light-bg dark:bg-dark-bg rounded"></div>
+                                </div>
+                            </div>
+                            <p class="text-xs text-center mt-2 text-light-text-muted dark:text-dark-text-muted">{{ _('Timeline') }}</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex items-center justify-between">
+            <a href="{{ url_for('blog.me') }}" class="px-4 py-2 text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary hover:text-brand-teal transition-colors">
+                {{ _('Back') }}
+            </a>
+            <button type="submit" class="px-6 py-2 text-sm font-medium text-white rounded-md transition-colors" style="background-color: {{ current_user.theme_color or '#4da9a4' }}">
+                {{ _('Save') }}
+            </button>
+        </div>
+    </form>
+
+    <!-- Delete Account Section -->
+    <div class="glass-card p-6 mt-8">
+        <h2 class="font-heading text-lg font-bold text-red-600 dark:text-red-500 mb-2">{{ _('Delete account') }}</h2>
+        <p class="text-sm text-light-text-secondary dark:text-dark-text-secondary mb-6">
+            {{ _('You can delete your account at any time. This action cannot be undone.') }}
+        </p>
+
+        <form id="delete-account-form" action="{{ url_for('blog.delete_account') }}" method="POST" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="space-y-3">
+                <label class="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-light-border dark:border-dark-border hover:border-red-300 dark:hover:border-red-900/50 transition-colors">
+                    <input type="radio" name="mode" value="delete_all" class="mt-1 text-red-600 focus:ring-red-500">
+                    <div>
+                        <div class="text-sm font-medium text-light-text-primary dark:text-dark-text-primary">{{ _('Delete profile and all content') }}</div>
+                        <div class="text-xs text-light-text-secondary dark:text-dark-text-secondary mt-1">{{ _('Posts, media, comments, pages and memberships will be deleted.') }}</div>
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-light-border dark:border-dark-border hover:border-red-300 dark:hover:border-red-900/50 transition-colors">
+                    <input type="radio" name="mode" value="keep_posts" class="mt-1 text-red-600 focus:ring-red-500">
+                    <div>
+                        <div class="text-sm font-medium text-light-text-primary dark:text-dark-text-primary">{{ _('Delete profile but keep posts') }}</div>
+                        <div class="text-xs text-light-text-secondary dark:text-dark-text-secondary mt-1">{{ _('Your username will be replaced with a note that the user was deleted.') }}</div>
+                    </div>
+                </label>
+            </div>
+
+            <div class="pt-2">
+                <label for="delete-account-password" class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">
+                    {{ _('Password') }}
+                </label>
+                <input id="delete-account-password" name="password" type="password" autocomplete="current-password" required
+                    class="w-full px-4 py-2 rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button type="button" id="delete-account-submit" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors shadow-sm">
+                    {{ _('Delete my account') }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Avatar preview
+    document.getElementById('avatar-input').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Update filename display
+            document.getElementById('avatar-filename').textContent = file.name;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('avatar-preview');
+                const placeholder = document.getElementById('avatar-placeholder');
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+                if (placeholder) {
+                    placeholder.classList.add('hidden');
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Cover image preview
+    document.getElementById('cover-input').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Update filename display
+            document.getElementById('cover-filename').textContent = file.name;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const container = document.getElementById('cover-preview-container');
+                const preview = document.getElementById('cover-preview');
+                const placeholder = document.getElementById('cover-placeholder');
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+                if (placeholder) {
+                    placeholder.classList.add('hidden');
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Color value display
+    document.getElementById('theme_color').addEventListener('input', function(e) {
+        document.getElementById('theme_color_value').textContent = e.target.value;
+    });
+</script>
+
+<script>
+    const delBtn = document.getElementById('delete-account-submit');
+    const delForm = document.getElementById('delete-account-form');
+    if (delBtn && delForm) {
+        delBtn.addEventListener('click', function() {
+            if (window.confirmModal && window.confirmModal.show) {
+                window.confirmModal.show({
+                    title: window.I18N.delete_account || window.I18N.confirm,
+                    message: window.I18N.delete_account_confirm,
+                    confirmText: window.I18N.delete_account || window.I18N.delete,
+                    confirmClass: 'bg-red-600 hover:bg-red-700',
+                    form: delForm
+                });
+            } else {
+                if (confirm('{{ _('Are you sure you want to delete your account?') }}')) {
+                    delForm.submit();
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}
+

@@ -1,0 +1,78 @@
+version: "3.8"
+
+services:
+  web:
+    build: .
+    container_name: chronicle-web
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - TZ=${TZ:-}
+      - CHRONICLE_DEFAULT_LOCALE=${CHRONICLE_DEFAULT_LOCALE:-}
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - DATABASE_URL=${DATABASE_URL:-}
+      - DB_HOST=db
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-chronicle}
+      - DB_USER=${DB_USER:-chronicle}
+      - DB_PASSWORD=${DB_PASSWORD:-chronicle}
+      - REDIS_URL=redis://redis:6379/0
+      - REGISTRATION_ENABLED=${REGISTRATION_ENABLED:-true}
+      - CDN_DOMAIN=${CDN_DOMAIN:-}
+      - PUBLIC_BASE_URL=${PUBLIC_BASE_URL:-}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-}
+      - SMTP_USE_TLS=${SMTP_USE_TLS:-}
+      - SMTP_USE_SSL=${SMTP_USE_SSL:-}
+      - SMTP_USERNAME=${SMTP_USERNAME:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_FROM=${SMTP_FROM:-}
+      - SMTP_FROM_NAME=${SMTP_FROM_NAME:-}
+    volumes:
+      - ./data/uploads:/app/src/static/uploads
+      - ./invites.txt:/app/invites.txt
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    container_name: chronicle-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${DB_USER:-chronicle}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-chronicle}
+      - POSTGRES_DB=${DB_NAME:-chronicle}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-chronicle} -d ${DB_NAME:-chronicle}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: chronicle-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres:
+  uploads:
+  redis:

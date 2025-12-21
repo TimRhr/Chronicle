@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ _('My Groups') }} - Chronicle{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-light-text dark:text-dark-text">{{ _('My Groups') }}</h1>
+        <a href="{{ url_for('social.create_group') }}" class="btn-primary flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            {{ _('New group') }}
+        </a>
+    </div>
+
+    {% if groups %}
+    <div class="grid gap-4">
+        {% for group in groups %}
+        <a href="{{ url_for('social.group_detail', slug=group.slug) }}" class="glass-card p-4 rounded-lg hover:border-brand-teal/50 transition-colors block">
+            <div class="flex items-center gap-4">
+                {% if group.icon_url %}
+                <img src="{{ group.icon_url if group.icon_url.startswith('/') or group.icon_url.startswith('http') else url_for('static', filename=group.icon_url) }}" alt="{{ group.name }}" class="w-12 h-12 rounded-lg object-cover flex-shrink-0">
+                {% else %}
+                <div class="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0" style="background-color: {{ group.color }}">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                {% endif %}
+                <div class="flex-1 min-w-0">
+                    <h3 class="font-semibold text-light-text dark:text-dark-text">{{ group.name }}</h3>
+                    {% if group.description %}
+                    <p class="text-sm text-light-text-secondary dark:text-dark-text-secondary line-clamp-2 break-words whitespace-normal">{{ group.description }}</p>
+                    {% endif %}
+                </div>
+                <div class="text-sm text-light-text-muted dark:text-dark-text-muted">
+                    {{ group.members.count() }} {{ _('Members') }}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="glass-card p-8 rounded-lg text-center">
+        <svg class="w-16 h-16 mx-auto mb-4 text-light-text-muted dark:text-dark-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+        <h3 class="text-lg font-semibold text-light-text dark:text-dark-text mb-2">{{ _('No groups yet') }}</h3>
+        <p class="text-light-text-secondary dark:text-dark-text-secondary mb-4">{{ _('Create a group to share private posts with others.') }}</p>
+        <a href="{{ url_for('social.create_group') }}" class="btn-primary inline-flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            {{ _('Create group') }}
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

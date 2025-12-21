@@ -1,0 +1,434 @@
+{% extends 'base.html' %}
+{% from 'components/post_card.html' import post_card_full with context %}
+{% from 'components/reactions_js.html' import reactions_scripts %}
+{% from 'components/poll.html' import poll_voting_js %}
+{% from 'components/skeleton.html' import post_skeleton, member_skeleton %}
+{% from 'components/empty_state.html' import empty_state %}
+{% from 'components/group_announcement_card.html' import announcement_card %}
+
+{% block title %}{{ group.name }} - Chronicle{% endblock %}
+
+{% block content %}
+{% set admin_count = members|selectattr('role', 'equalto', 'admin')|list|length %}
+{% set needs_admin_transfer = is_admin and admin_count == 1 and (members|length) > 1 %}
+{% set is_last_member = (members|length) == 1 %}
+{% if group.cover_image_url %}
+<!-- Cover Image (same style as profile pages) -->
+<div class="relative h-32 md:h-40 -mx-4 md:-mx-8 -mt-4 mb-6 cover-container">
+    <div class="absolute inset-x-4 inset-y-2 rounded-2xl overflow-hidden shadow-lg cover-frame" style="border-radius: 1rem;">
+        <img src="{{ group.cover_image_url }}" alt="{{ group.name }} Cover" class="w-full h-full object-cover cover-image scale-110" style="border-radius: 1rem;">
+    </div>
+    <!-- Blurry edge effect -->
+    <div class="absolute inset-x-4 inset-y-2 rounded-2xl pointer-events-none" style="box-shadow: inset 0 0 30px 10px var(--cover-blur-color, rgba(247,250,248,0.5));"></div>
+    <div class="absolute inset-x-4 bottom-2 h-16 bg-gradient-to-t from-light-bg dark:from-dark-bg to-transparent rounded-b-2xl"></div>
+</div>
+{% endif %}
+
+{% if needs_admin_transfer %}
+<div id="transfer-admin-modal" class="hidden fixed inset-0 z-[9998] flex items-center justify-center p-4 sm:p-6">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity z-[9997]" id="transfer-admin-backdrop" onclick="(function(){var m=document.getElementById('transfer-admin-modal'); if(m){m.classList.add('hidden');} document.body.style.overflow='';})()"></div>
+    <div class="relative z-[9998] bg-light-surface dark:bg-dark-surface rounded-lg shadow-2xl border border-light-border dark:border-dark-border max-w-md w-full mx-auto p-6">
+        <div class="flex items-center justify-between gap-3 mb-4">
+            <h3 class="font-heading text-lg font-bold">{{ _('Transfer admin role') }}</h3>
+            <button type="button" id="transfer-admin-close" onclick="(function(){var m=document.getElementById('transfer-admin-modal'); if(m){m.classList.add('hidden');} document.body.style.overflow='';})()" class="p-2 rounded-md hover:bg-light-bg dark:hover:bg-dark-bg transition-colors" title="{{ _('Close') }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <p class="text-sm text-light-text-muted dark:text-dark-text-muted mb-4">
+            {{ _('You are the only admin. Choose a new admin before leaving the group.') }}
+        </p>
+
+        <label class="block text-sm font-medium text-light-text dark:text-dark-text mb-2">{{ _('New admin') }}</label>
+        <select id="transfer-admin-select" onchange="(function(sel){var btn=document.getElementById('transfer-admin-confirm'); if(btn){btn.disabled = !sel.value;}})(this)" class="w-full px-4 py-2 rounded-lg bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border text-light-text dark:text-dark-text focus:ring-2 focus:ring-brand-teal focus:border-transparent">
+            <option value="">{{ _('Select member') }}</option>
+            {% for m in members %}
+                {% if m.user.id != current_user.id %}
+                <option value="{{ m.user.id }}">{{ m.user.display_name or m.user.username }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+
+        <div class="mt-3 flex justify-end gap-2">
+            <button type="button" id="transfer-admin-cancel" onclick="(function(){var m=document.getElementById('transfer-admin-modal'); if(m){m.classList.add('hidden');} document.body.style.overflow='';})()" class="px-4 py-2 text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary hover:bg-light-bg dark:hover:bg-dark-bg rounded-lg transition-colors">
+                {{ _('Cancel') }}
+            </button>
+            <button type="button" id="transfer-admin-confirm" disabled onclick="(function(){var sel=document.getElementById('transfer-admin-select'); var hidden=document.getElementById('leave-new-admin-id'); if(sel&&hidden&&sel.value){hidden.value=sel.value;} var m=document.getElementById('transfer-admin-modal'); if(m){m.classList.add('hidden');} document.body.style.overflow=''; var f=document.getElementById('leave-group-form-cover'); if(window.confirmModal&&window.confirmModal.show){window.confirmModal.show({title: window.I18N.confirm, message: window.I18N.leave_group_confirm, confirmText: window.I18N.leave, confirmClass: 'bg-red-600 hover:bg-red-700', form: f});}else{if(confirm(window.I18N.leave_group_confirm||'Leave group?')){if(f) f.submit();}}})()" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                {{ _('Leave') }}
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="container mx-auto px-4 max-w-4xl">
+    <!-- Group Header Card -->
+    <div class="glass-card p-4 md:p-5 rounded-xl mb-6 {% if group.cover_image_url %}-mt-20 relative z-10{% endif %}">
+        <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3 min-w-0">
+                {% if group.icon_url %}
+                <img src="{{ group.icon_url }}" alt="{{ group.name }}" class="w-12 h-12 rounded-lg object-cover flex-shrink-0">
+                {% else %}
+                <div class="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold flex-shrink-0" style="background-color: {{ group.color }}">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                {% endif %}
+                <div class="min-w-0">
+                    <h1 class="text-lg md:text-xl font-bold text-light-text dark:text-dark-text truncate">{{ group.name }}</h1>
+                    <p class="text-xs text-light-text-muted dark:text-dark-text-muted">{{ members|length }} {{ _('Members') }} · {{ posts|length }} {{ _('Posts') }}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-1 flex-shrink-0">
+                <a href="{{ url_for('social.group_files', slug=group.slug) }}" class="p-2 text-light-text-secondary dark:text-dark-text-secondary hover:text-brand-teal rounded-lg hover:bg-light-bg dark:hover:bg-dark-bg transition-colors" title="{{ _('Files') }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                    </svg>
+                </a>
+                {% if is_admin %}
+                <a href="{{ url_for('social.group_settings', slug=group.slug) }}" class="p-2 text-light-text-secondary dark:text-dark-text-secondary hover:text-brand-teal rounded-lg hover:bg-light-bg dark:hover:bg-dark-bg transition-colors" title="{{ _('Settings') }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </a>
+                {% endif %}
+                <form id="leave-group-form-cover" action="{{ url_for('social.leave_group', slug=group.slug) }}" method="POST" class="inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="confirm_group_name" id="leave-confirm-group-name" value="">
+                    {% if needs_admin_transfer %}
+                    <input type="hidden" name="new_admin_id" id="leave-new-admin-id" value="">
+                    <button type="button" id="leave-group-btn-cover" onclick="(function(){var m=document.getElementById('transfer-admin-modal'); if(m){m.classList.remove('hidden'); document.body.style.overflow='hidden';}})()" class="p-2 text-light-text-secondary dark:text-dark-text-secondary hover:text-red-500 rounded-lg hover:bg-light-bg dark:hover:bg-dark-bg transition-colors" title="{{ _('Leave') }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </button>
+                    {% else %}
+                    <button type="button" onclick="(function(){if({{ 'true' if is_last_member else 'false' }}){if(window.openLeaveDeleteConfirmModal){window.openLeaveDeleteConfirmModal();}return;} if(window.confirmModal&&window.confirmModal.show){window.confirmModal.show({title: window.I18N.confirm, message: window.I18N.leave_group_confirm, confirmText: window.I18N.leave, confirmClass: 'bg-red-600 hover:bg-red-700', form: document.getElementById('leave-group-form-cover')});}else{if(confirm(window.I18N.leave_group_confirm||'Leave group?')){document.getElementById('leave-group-form-cover').submit();}}})()" class="p-2 text-light-text-secondary dark:text-dark-text-secondary hover:text-red-500 rounded-lg hover:bg-light-bg dark:hover:bg-dark-bg transition-colors" title="{{ _('Leave') }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        {% if group.description %}
+        <p class="text-light-text-secondary dark:text-dark-text-secondary mt-3 text-sm">{{ group.description }}</p>
+        {% endif %}
+
+        <div class="mt-4 pt-4 border-t border-light-border dark:border-dark-border flex items-center justify-between gap-3">
+            <div class="flex items-center -space-x-2">
+                {% for m in members[:5] %}
+                {% set member_url = url_for('blog.me') if current_user.is_authenticated and current_user.id == m.user.id else url_for('blog.public_profile', username=m.user.username) %}
+                <a href="{{ member_url }}" title="{{ m.user.display_name or m.user.username }}{% if m.role == 'admin' %} (Admin){% endif %}">
+                    {% if m.user.avatar_url %}
+                    <img src="{{ m.user.avatar_url }}" alt="{{ m.user.username }}" class="w-8 h-8 rounded-full border-2 border-light-surface dark:border-dark-surface object-cover">
+                    {% else %}
+                    <div class="w-8 h-8 rounded-full border-2 border-light-surface dark:border-dark-surface flex items-center justify-center text-xs font-bold text-white" style="background-color: {{ m.user.theme_color or '#4da9a4' }}">
+                        {{ (m.user.display_name or m.user.username)[0]|upper }}
+                    </div>
+                    {% endif %}
+                </a>
+                {% endfor %}
+                {% if members|length > 5 %}
+                <div class="w-8 h-8 rounded-full border-2 border-light-surface dark:border-dark-surface bg-light-bg dark:bg-dark-bg flex items-center justify-center text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary">
+                    +{{ members|length - 5 }}
+                </div>
+                {% endif %}
+            </div>
+
+            <button type="button" id="members-open" class="text-sm text-light-text-secondary dark:text-dark-text-secondary hover:text-brand-teal transition-colors">
+                Mitglieder ({{ members|length }})
+            </button>
+        </div>
+    </div>
+
+    <!-- Announcements (vor den Buttons) -->
+    {% if announcements %}
+    <div class="space-y-4 mb-6">
+        {% for ann in announcements %}
+        {{ announcement_card(ann, is_admin, current_user.id if current_user.is_authenticated else none) }}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="flex items-center gap-2 mb-6">
+        {% if is_admin %}
+        {% if announcements and announcements|length > 0 %}
+        <a href="{{ url_for('social.edit_group_announcement', announcement_id=announcements[0].id) }}" 
+            class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all" 
+            title="{{ _('Edit announcement') }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+            </svg>
+        </a>
+        {% else %}
+        <a href="{{ url_for('social.create_group_announcement', slug=group.slug) }}" 
+            class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all" 
+            title="{{ _('Create announcement') }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+            </svg>
+        </a>
+        {% endif %}
+        {% endif %}
+        <a href="{{ url_for('blog.new_post', group=group.slug, next=request.full_path) }}" class="btn-primary flex-1 flex items-center justify-center gap-2 text-sm py-2.5 rounded-lg border border-white/20 bg-white/10 hover:bg-white/15 hover:border-white/30 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-white/30">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            <span>{{ _('Post') }}</span>
+        </a>
+    </div>
+
+    <div id="members-modal" class="hidden fixed inset-0 z-[9998] flex items-center justify-center p-4 sm:p-6">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity z-[9997]" id="members-modal-backdrop"></div>
+        <div class="relative z-[9998] bg-light-surface dark:bg-dark-surface rounded-lg shadow-2xl border border-light-border dark:border-dark-border max-w-md w-full mx-auto p-6 max-h-[85vh] overflow-hidden">
+            <div class="flex items-center justify-between gap-3 mb-4">
+                <h3 class="font-heading text-lg font-bold">{{ _('Members') }} ({{ members|length }})</h3>
+                <button type="button" id="members-close" class="p-2 rounded-md hover:bg-light-bg dark:hover:bg-dark-bg transition-colors" title="{{ _('Close') }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="max-h-[60vh] overflow-y-auto divide-y divide-light-border dark:divide-dark-border rounded-lg border border-light-border dark:border-dark-border p-1">
+                {% for m in members %}
+                {% set member_url = url_for('blog.me') if current_user.is_authenticated and current_user.id == m.user.id else url_for('blog.public_profile', username=m.user.username) %}
+                <a href="{{ member_url }}" class="flex items-center gap-3 py-2.5 hover:bg-light-bg dark:hover:bg-dark-bg rounded-md px-3 transition-colors">
+                    {% if m.user.avatar_url %}
+                    <img src="{{ m.user.avatar_url }}" alt="{{ m.user.username }}" class="w-10 h-10 rounded-full object-cover">
+                    {% else %}
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white" style="background-color: {{ m.user.theme_color or '#4da9a4' }}">
+                        {{ (m.user.display_name or m.user.username)[0]|upper }}
+                    </div>
+                    {% endif %}
+                    <div class="min-w-0">
+                        <div class="font-medium text-light-text dark:text-dark-text truncate">
+                            {{ m.user.display_name or m.user.username }}
+                            {% if m.role == 'admin' %}
+                            <span class="text-xs text-light-text-muted dark:text-dark-text-muted">(Admin)</span>
+                            {% endif %}
+                        </div>
+                        <div class="text-xs text-light-text-muted dark:text-dark-text-muted truncate">@{{ m.user.username }}</div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Posts -->
+    {% if posts %}
+    <div class="space-y-6">
+        {% for post in posts %}
+        {% set is_own_post = current_user.is_authenticated and current_user.id == post.user_id %}
+        {% set is_scheduled_future = post.scheduled_at and now and post.scheduled_at > now %}
+        {% set is_unpublished = not post.is_published %}
+        {% set is_dimmed = is_unpublished or is_scheduled_future %}
+        
+        {{ post_card_full(post, post.author.theme_color, is_own_post) }}
+        {% endfor %}
+    </div>
+    {% elif not announcements %}
+    {{ empty_state(
+        icon='document',
+        title=_('No posts yet'),
+        description=_('Share the first post in this group.'),
+        action_url=url_for('blog.new_post', group=group.slug, next=request.full_path),
+        action_text=_('Create post'),
+        action_icon='plus'
+    ) }}
+    {% endif %}
+</div>
+
+{{ reactions_scripts(group.color, current_user.id if current_user.is_authenticated else None) }}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    const membersModal = document.getElementById('members-modal');
+    const membersOpen = document.getElementById('members-open');
+    const membersClose = document.getElementById('members-close');
+    const membersBackdrop = document.getElementById('members-modal-backdrop');
+
+    if (membersModal && membersModal.parentElement !== document.body) {
+        document.body.appendChild(membersModal);
+    }
+
+    const transferModal = document.getElementById('transfer-admin-modal');
+    if (transferModal && transferModal.parentElement !== document.body) {
+        document.body.appendChild(transferModal);
+    }
+
+    function ensureLeaveDeleteConfirmModal() {
+        if (document.getElementById('leave-delete-confirm-modal')) return;
+        const modalHtml = `
+            <div id="leave-delete-confirm-modal" class="hidden fixed inset-0 flex items-center justify-center" style="z-index: 9999;">
+                <div id="leave-delete-confirm-backdrop" class="fixed inset-0 bg-black/60 transition-opacity" style="z-index: 9999;"></div>
+                <div class="relative bg-light-surface dark:bg-dark-surface rounded-lg shadow-2xl border border-light-border dark:border-dark-border max-w-md w-full mx-3 sm:mx-4 p-5 sm:p-6" style="z-index: 10000;">
+                    <div class="flex items-center justify-between gap-3 mb-3">
+                        <h3 class="font-heading text-lg font-bold text-light-text dark:text-dark-text">${window.I18N.delete_group}</h3>
+                        <button type="button" id="leave-delete-confirm-close" class="p-2 rounded-md hover:bg-light-bg dark:hover:bg-dark-bg transition-colors" title="${window.I18N.close}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="text-sm text-light-text-muted dark:text-dark-text-muted mb-4">
+                        ${window.I18N.delete_group_confirm_text.replace('{name}', '{{ group.name }}')}
+                    </p>
+                    <input id="leave-delete-confirm-input" type="text" class="w-full px-4 py-2 rounded-lg bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border text-light-text dark:text-dark-text focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="{{ group.name }}" autocomplete="off">
+                    <div class="flex items-center justify-end gap-2 mt-4">
+                        <button type="button" id="leave-delete-confirm-cancel" class="px-4 py-2 text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary hover:text-light-text dark:hover:text-dark-text transition-colors">${window.I18N.cancel}</button>
+                        <button type="button" id="leave-delete-confirm-btn" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg opacity-50 cursor-not-allowed" disabled>
+                            ${window.I18N.delete_permanently}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    function openLeaveDeleteConfirmModal() {
+        ensureLeaveDeleteConfirmModal();
+        const modal = document.getElementById('leave-delete-confirm-modal');
+        const backdrop = document.getElementById('leave-delete-confirm-backdrop');
+        const closeBtn = document.getElementById('leave-delete-confirm-close');
+        const cancelBtn = document.getElementById('leave-delete-confirm-cancel');
+        const input = document.getElementById('leave-delete-confirm-input');
+        const confirmBtn = document.getElementById('leave-delete-confirm-btn');
+        const leaveForm = document.getElementById('leave-group-form-cover');
+        const hidden = document.getElementById('leave-confirm-group-name');
+
+        if (!modal || !backdrop || !closeBtn || !cancelBtn || !input || !confirmBtn || !leaveForm || !hidden) return;
+
+        const expected = '{{ group.name }}';
+        input.value = '';
+        confirmBtn.disabled = true;
+        confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        confirmBtn.classList.remove('hover:bg-red-700');
+
+        function close() {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function onInput() {
+            const ok = (input.value || '').trim() === expected;
+            confirmBtn.disabled = !ok;
+            if (ok) {
+                confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                confirmBtn.classList.add('hover:bg-red-700');
+            } else {
+                confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                confirmBtn.classList.remove('hover:bg-red-700');
+            }
+        }
+
+        input.addEventListener('input', onInput);
+        backdrop.addEventListener('click', close);
+        closeBtn.addEventListener('click', close);
+        cancelBtn.addEventListener('click', close);
+
+        confirmBtn.addEventListener('click', function() {
+            hidden.value = (input.value || '').trim();
+            leaveForm.submit();
+        });
+
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => input.focus(), 50);
+    }
+
+    window.openLeaveDeleteConfirmModal = openLeaveDeleteConfirmModal;
+
+    function openMembersModal() {
+        if (!membersModal) return;
+        membersModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeMembersModal() {
+        if (!membersModal) return;
+        membersModal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    if (membersOpen) membersOpen.addEventListener('click', openMembersModal);
+    if (membersClose) membersClose.addEventListener('click', closeMembersModal);
+    if (membersBackdrop) membersBackdrop.addEventListener('click', closeMembersModal);
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && membersModal && !membersModal.classList.contains('hidden')) {
+            closeMembersModal();
+        }
+    });
+    
+    // Edit announcement - redirect to edit page
+    function editAnnouncement(announcementId) {
+        window.location.href = '/groups/announcements/' + announcementId + '/edit';
+    }
+
+    {% if needs_admin_transfer %}
+    const transferBackdrop = document.getElementById('transfer-admin-backdrop');
+    const transferClose = document.getElementById('transfer-admin-close');
+    const transferCancel = document.getElementById('transfer-admin-cancel');
+    const transferConfirm = document.getElementById('transfer-admin-confirm');
+    const transferSelect = document.getElementById('transfer-admin-select');
+    const leaveBtn = document.getElementById('leave-group-btn-cover');
+    const leaveNewAdminId = document.getElementById('leave-new-admin-id');
+
+    function openTransferModal() {
+        if (!transferModal) return;
+        transferModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeTransferModal() {
+        if (!transferModal) return;
+        transferModal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    if (leaveBtn) leaveBtn.addEventListener('click', openTransferModal);
+    if (transferBackdrop) transferBackdrop.addEventListener('click', closeTransferModal);
+    if (transferClose) transferClose.addEventListener('click', closeTransferModal);
+    if (transferCancel) transferCancel.addEventListener('click', closeTransferModal);
+
+    function updateTransferConfirmState() {
+        if (!transferConfirm) return;
+        const selected = transferSelect ? transferSelect.value : '';
+        transferConfirm.disabled = !selected;
+    }
+
+    if (transferSelect) {
+        transferSelect.addEventListener('change', updateTransferConfirmState);
+        updateTransferConfirmState();
+    }
+
+    if (transferConfirm) {
+        transferConfirm.addEventListener('click', function() {
+            const selected = transferSelect ? transferSelect.value : '';
+            if (!selected) return;
+            if (leaveNewAdminId) leaveNewAdminId.value = selected;
+            closeTransferModal();
+            window.confirmModal.show({
+                title: window.I18N.confirm,
+                message: window.I18N.leave_group_confirm,
+                confirmText: window.I18N.leave,
+                confirmClass: 'bg-red-600 hover:bg-red-700',
+                form: document.getElementById('leave-group-form-cover')
+            });
+        });
+    }
+    {% endif %}
+</script>
+{{ poll_voting_js() }}
+{% endblock %}

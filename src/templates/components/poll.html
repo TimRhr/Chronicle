@@ -1,0 +1,69 @@
+{% macro render_poll(post) %}
+{% if post.poll %}
+{% set poll_options = post.poll.options.all() %}
+{% set ns = namespace(total_votes=0) %}
+{% for opt in poll_options %}
+    {% set ns.total_votes = ns.total_votes + opt.votes.count() %}
+{% endfor %}
+<div class="poll-container mt-4 p-4 border border-light-border dark:border-dark-border rounded-lg bg-light-bg/50 dark:bg-dark-bg/50" data-poll-id="{{ post.poll.id }}">
+    <h4 class="font-medium mb-3">{{ post.poll.question }}</h4>
+    <div class="poll-options space-y-2">
+        {% for option in poll_options %}
+        {% set vote_count = option.votes.count() %}
+        {% set percentage = (vote_count / ns.total_votes * 100) if ns.total_votes > 0 else 0 %}
+        <button type="button" class="poll-option w-full text-left p-3 rounded-lg border border-light-border dark:border-dark-border hover:border-brand-teal transition-colors relative overflow-hidden" data-option-id="{{ option.id }}">
+            <div class="poll-bar absolute inset-0 bg-brand-teal/20 transition-all duration-500" style="width: {{ percentage }}%"></div>
+            <div class="relative flex justify-between items-center">
+                <span>{{ option.text }}</span>
+                <span class="poll-percentage text-sm text-light-text-muted dark:text-dark-text-muted">{{ "%.1f"|format(percentage) }}%</span>
+            </div>
+        </button>
+        {% endfor %}
+    </div>
+    <p class="poll-total mt-3 text-xs text-light-text-muted dark:text-dark-text-muted">
+        {{ ns.total_votes }} Stimmen
+    </p>
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro poll_voting_js() %}
+<script>
+    // Poll voting functionality
+    document.querySelectorAll('.poll-option').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const pollContainer = this.closest('.poll-container');
+            const pollId = pollContainer.dataset.pollId;
+            const optionId = this.dataset.optionId;
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            fetch(`/api/polls/${pollId}/vote`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {})
+                },
+                body: JSON.stringify({ option_ids: [parseInt(optionId)] })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload poll data
+                    fetch(`/api/polls/${pollId}`)
+                        .then(res => res.json())
+                        .then(poll => {
+                            poll.options.forEach((opt) => {
+                                const optBtn = pollContainer.querySelector(`[data-option-id="${opt.id}"]`);
+                                if (optBtn) {
+                                    optBtn.querySelector('.poll-bar').style.width = opt.percentage + '%';
+                                    optBtn.querySelector('.poll-percentage').textContent = opt.percentage + '%';
+                                }
+                            });
+                            pollContainer.querySelector('.poll-total').textContent = poll.total_votes + ' Stimmen';
+                        });
+                }
+            });
+        });
+    });
+</script>
+{% endmacro %}

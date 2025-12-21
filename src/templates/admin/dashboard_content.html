@@ -1,0 +1,162 @@
+<!-- Engagement Section -->
+<section id="engagement" class="mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Emoji Stats -->
+        <div class="glass-card rounded-xl p-6">
+            <h3 class="font-semibold text-lg mb-6">Reaction Breakdown</h3>
+            <div class="space-y-4">
+                {% for emoji, count in emoji_stats %}
+                <div class="flex items-center gap-4">
+                    <span class="emoji-stat">{{ emoji }}</span>
+                    <div class="flex-1">
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm text-dark-text-secondary">{{ count }} reactions</span>
+                            <span class="text-xs text-dark-text-muted">{% if kpis.reactions.total > 0 %}{{ ((count / kpis.reactions.total) * 100)|round(1) }}%{% else %}0%{% endif %}</span>
+                        </div>
+                        <div class="h-2 bg-dark-bg rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-brand-teal to-brand-mint rounded-full" style="width: {% if kpis.reactions.total > 0 %}{{ (count / kpis.reactions.total) * 100 }}%{% else %}0%{% endif %}"></div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-dark-text-muted text-sm">Keine Reactions vorhanden</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Engagement Pie -->
+        <div class="glass-card rounded-xl p-6">
+            <h3 class="font-semibold text-lg mb-6">Engagement Types</h3>
+            <div class="rounded-lg p-4 bg-dark-bg/30" style="height: 250px;"><canvas id="engagementPie"></canvas></div>
+        </div>
+        
+        <!-- Notifications -->
+        <div class="glass-card rounded-xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="font-semibold text-lg">Notifications</h3>
+                <span class="px-2 py-1 rounded-full text-xs font-mono bg-red-500/20 text-red-400 border border-red-500/30">{{ unread_notifications }} unread</span>
+            </div>
+            <div class="space-y-3">
+                {% for notif_type, count in notification_stats %}
+                <div class="flex items-center justify-between p-3 rounded-lg bg-dark-bg/50">
+                    <span class="text-sm capitalize">{{ notif_type }}</span>
+                    <span class="font-mono text-brand-teal">{{ count }}</span>
+                </div>
+                {% else %}
+                <p class="text-dark-text-muted text-sm">Keine Notifications</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Users Section -->
+<section id="users" class="mb-8">
+    <div class="grid grid-cols-1 gap-6">
+        <!-- Top Posters -->
+        <div class="glass-card rounded-xl p-6">
+            <h3 class="font-semibold text-lg mb-6 flex items-center gap-2">
+                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Most Active Posters
+            </h3>
+            <div class="space-y-3">
+                {% for user, count in top_posters[:8] %}
+                {% if count > 0 %}
+                <div class="flex items-center gap-3 p-3 rounded-lg bg-dark-bg/50 hover:bg-dark-bg transition-colors">
+                    <span class="text-lg font-bold text-purple-400 w-8">{{ loop.index }}</span>
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white" style="background-color: {{ user.theme_color or '#4da9a4' }}">{{ (user.display_name or user.username)[0]|upper }}</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium">{{ user.display_name or user.username }}</p>
+                        <p class="text-xs text-dark-text-muted">@{{ user.username }}</p>
+                    </div>
+                    <span class="font-mono text-purple-400">{{ count }} posts</span>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Groups & Tags -->
+<section id="groups" class="mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Top Groups -->
+        <div class="glass-card rounded-xl p-6">
+            <h3 class="font-semibold text-lg mb-6 flex items-center gap-2">
+                <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="8" r="3" stroke-width="2"></circle>
+                    <circle cx="6.5" cy="10" r="2.25" stroke-width="2"></circle>
+                    <circle cx="17.5" cy="10" r="2.25" stroke-width="2"></circle>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 20v-1c0-2.761 2.91-5 6-5s6 2.239 6 5v1z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 20v-1.5c0-2.1 2.4-3.8 5.4-3.8"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 20v-1.5c0-2.1-2.4-3.8-5.4-3.8"/>
+                </svg>
+                Top Groups
+            </h3>
+            <div class="space-y-3">
+                {% for group, member_count, post_count in top_groups %}
+                <div class="flex items-center gap-3 p-3 rounded-lg bg-dark-bg/50 hover:bg-dark-bg transition-colors">
+                    <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white text-sm" style="background-color: {{ group.color }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="8" r="3" stroke-width="2"></circle>
+                            <circle cx="6.5" cy="10" r="2.25" stroke-width="2"></circle>
+                            <circle cx="17.5" cy="10" r="2.25" stroke-width="2"></circle>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 20v-1c0-2.761 2.91-5 6-5s6 2.239 6 5v1z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 20v-1.5c0-2.1 2.4-3.8 5.4-3.8"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 20v-1.5c0-2.1-2.4-3.8-5.4-3.8"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium">{{ group.name }}</p>
+                        <p class="text-xs text-dark-text-muted">{{ member_count }} members • {{ post_count }} posts</p>
+                    </div>
+                    {% if group.is_private %}<span class="px-2 py-1 rounded text-xs bg-dark-border text-dark-text-muted">Private</span>{% endif %}
+                </div>
+                {% else %}
+                <p class="text-dark-text-muted text-sm">Keine Gruppen vorhanden</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Top Tags -->
+        <div class="glass-card rounded-xl p-6">
+            <h3 class="font-semibold text-lg mb-6 flex items-center gap-2">
+                <svg class="w-5 h-5 text-brand-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                Popular Tags
+            </h3>
+            <div class="flex flex-wrap gap-2">
+                {% for name, color, count in top_tags %}
+                {% if count > 0 %}
+                <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm" style="background-color: {{ color }}20; color: {{ color }}; border: 1px solid {{ color }}40;">
+                    #{{ name }}<span class="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-black/20">{{ count }}</span>
+                </span>
+                {% endif %}
+                {% else %}
+                <p class="text-dark-text-muted text-sm">Keine Tags vorhanden</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Activity -->
+<section class="mb-8">
+    <div class="grid grid-cols-1 gap-6">
+        <div class="glass-card rounded-xl p-6">
+            <h3 class="font-semibold text-lg mb-4 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500 pulse-dot"></span>Recent Users</h3>
+            <div class="flex flex-wrap items-start justify-start gap-3">
+                {% for user in recent_users %}
+                <div class="flex items-center gap-3 text-sm p-2 rounded-lg bg-dark-bg/30">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style="background-color: {{ user.theme_color or '#4da9a4' }}">{{ (user.display_name or user.username)[0]|upper }}</div>
+                    <div class="min-w-0"><p class="font-medium truncate">{{ user.display_name or user.username }}</p><p class="text-xs text-dark-text-muted truncate">@{{ user.username }}</p></div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="text-center text-sm text-dark-text-muted py-8 border-t border-dark-border">
+    <p>Chronicle Analytics Dashboard • Data as of {{ now.strftime('%d.%m.%Y %H:%M:%S') }}</p>
+</footer>

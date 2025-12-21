@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "components/post_card.html" import post_card_full with context %}
+{% from "components/reactions_js.html" import reactions_scripts %}
+{% from "components/poll.html" import poll_voting_js %}
+
+{% block title %}{{ post.title or _('Post') }} - Chronicle{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <!-- Back Button -->
+    <div class="mb-4">
+        <a href="{{ url_for('blog.feed') }}" class="inline-flex items-center gap-2 text-sm text-light-text-muted dark:text-dark-text-muted hover:text-brand-teal transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            {{ _('Back to feed') }}
+        </a>
+    </div>
+    
+    <!-- Post -->
+    {{ post_card_full(post, post.author.theme_color, is_own_post) }}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ poll_voting_js() }}
+{{ reactions_scripts(post.author.theme_color or '#4da9a4') }}
+{% endblock %}

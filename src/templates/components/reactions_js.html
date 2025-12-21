@@ -1,0 +1,1011 @@
+<!-- Reactions and Comments JavaScript Component -->
+
+{% macro reactions_scripts(theme_color, current_user_id=None) %}
+<script>
+    // ============== Reactions, Comments ==============
+
+    // ============== Comment Reactions (UI helpers) ==============
+    let activeCommentReactionPicker = null;
+    let activeCommentReactionContainer = null;
+
+    function closeActiveCommentReactionPicker() {
+        if (activeCommentReactionPicker) {
+            activeCommentReactionPicker.classList.add('hidden');
+        }
+        activeCommentReactionPicker = null;
+        activeCommentReactionContainer = null;
+    }
+
+    // Close on outside click (single global handler)
+    document.addEventListener('click', function(e) {
+        if (!activeCommentReactionContainer) return;
+        if (activeCommentReactionContainer.contains(e.target)) return;
+        closeActiveCommentReactionPicker();
+    });
+
+    function initPostCollapse(article) {
+        if (!article || article.dataset.postCollapseInit === 'true') return;
+
+        const wrapperEl = article.querySelector('.post-content');
+        const bodyEl = article.querySelector('.post-content-body');
+        if (!wrapperEl || !bodyEl) {
+            article.dataset.postCollapseInit = 'true';
+            return;
+        }
+
+        if (wrapperEl.dataset.postCollapseInit === 'true') {
+            article.dataset.postCollapseInit = 'true';
+            return;
+        }
+
+        wrapperEl.dataset.postCollapseInit = 'true';
+        article.dataset.postCollapseInit = 'true';
+
+        // Measure visual lines based on computed line-height.
+        const cs = window.getComputedStyle(wrapperEl);
+        const lineHeight = parseFloat(cs.lineHeight);
+        if (!Number.isFinite(lineHeight) || lineHeight <= 0) return;
+
+        const maxLines = article.classList.contains('feed-view-compact') ? 7 : 30;
+        const maxHeight = Math.round(lineHeight * maxLines);
+
+        // If the content doesn't overflow, do nothing.
+        if (bodyEl.scrollHeight <= maxHeight + 2) return;
+
+        wrapperEl.classList.add('post-content-collapsible', 'post-content-collapsed');
+        bodyEl.style.maxHeight = `${maxHeight}px`;
+        bodyEl.style.overflow = 'hidden';
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'post-collapse-toggle mt-3 text-sm font-medium hover:underline flex items-center gap-1';
+        btn.style.color = article.dataset.themeColor || '#4da9a4';
+        btn.innerHTML = `
+            <span class="post-collapse-text">${(window.I18N && window.I18N.show_more) ? window.I18N.show_more : 'Show more'}</span>
+            <svg class="w-4 h-4 post-collapse-icon transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        `;
+
+        const insertBefore = article.querySelector('.link-previews-container, .link-previews, .media-container, .tags-container, .post-reactions');
+        if (insertBefore) {
+            insertBefore.parentNode.insertBefore(btn, insertBefore);
+        } else {
+            article.appendChild(btn);
+        }
+
+        btn.addEventListener('click', function() {
+            const isCollapsed = wrapperEl.classList.contains('post-content-collapsed');
+            const textEl = btn.querySelector('.post-collapse-text');
+            const iconEl = btn.querySelector('.post-collapse-icon');
+
+            if (isCollapsed) {
+                wrapperEl.classList.remove('post-content-collapsed');
+                bodyEl.style.maxHeight = 'none';
+                bodyEl.style.overflow = 'visible';
+                if (textEl) textEl.textContent = (window.I18N && window.I18N.show_less) ? window.I18N.show_less : 'Show less';
+                if (iconEl) iconEl.style.transform = 'rotate(180deg)';
+            } else {
+                wrapperEl.classList.add('post-content-collapsed');
+                bodyEl.style.maxHeight = `${maxHeight}px`;
+                bodyEl.style.overflow = 'hidden';
+                if (textEl) textEl.textContent = (window.I18N && window.I18N.show_more) ? window.I18N.show_more : 'Show more';
+                if (iconEl) iconEl.style.transform = 'rotate(0deg)';
+            }
+        });
+    }
+
+    function refreshPostCollapse(article) {
+        if (!article) return;
+        const wrapperEl = article.querySelector('.post-content');
+        const bodyEl = article.querySelector('.post-content-body');
+        const btn = article.querySelector('.post-collapse-toggle');
+        if (btn) btn.remove();
+        if (wrapperEl) wrapperEl.classList.remove('post-content-collapsible', 'post-content-collapsed');
+        if (bodyEl) {
+            bodyEl.style.maxHeight = '';
+            bodyEl.style.overflow = '';
+        }
+        article.dataset.postCollapseInit = 'false';
+        if (wrapperEl) wrapperEl.dataset.postCollapseInit = 'false';
+        initPostCollapse(article);
+    }
+
+    window.refreshPostCollapse = refreshPostCollapse;
+
+    function fetchJson(url, options) {
+        return fetch(url, options).then(res => {
+            const ct = (res.headers.get('content-type') || '').toLowerCase();
+            if (!ct.includes('application/json')) {
+                throw new Error('non_json_response');
+            }
+            return res.json().then(data => {
+                if (!res.ok) {
+                    const err = new Error('http_error');
+                    err.data = data;
+                    throw err;
+                }
+                return data;
+            });
+        });
+    }
+    
+    // Load reactions summary and comment count
+    function loadReactionsSummary(postReactionsEl) {
+        const postId = postReactionsEl.dataset.postId;
+        const summaryEl = postReactionsEl.querySelector('.reactions-summary');
+        const commentCountEl = postReactionsEl.querySelector('.comment-count');
+        
+        // Load reactions
+        if (summaryEl) {
+            fetch('/api/posts/' + postId + '/reactions')
+            .then(res => res.json())
+            .then(data => {
+                if (data.total === 0) {
+                    summaryEl.innerHTML = '';
+                    return;
+                }
+                
+                let html = '';
+                for (const [emoji, info] of Object.entries(data.reactions)) {
+                    if (info.count > 0) {
+                        const usersText = info.users.length > 0 ? info.users.join(', ') : window.I18N.anonymous;
+                        html += `<span class="reaction-badge group relative inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-light-bg dark:bg-dark-bg cursor-default hover:scale-105 transition-transform" style="overflow:visible">
+                            <span>${emoji}</span>
+                            <span class="text-xs font-medium">${info.count}</span>
+                            <span class="reaction-tooltip pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 text-xs text-white bg-gray-900 dark:bg-gray-800 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[100]" style="white-space:nowrap;max-width:none">
+                                <b>${info.count}× ${emoji}</b> ${usersText}
+                                <span class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></span>
+                            </span>
+                        </span>`;
+                    }
+                }
+                summaryEl.innerHTML = html;
+            })
+            .catch(() => {
+                summaryEl.innerHTML = '';
+            });
+        }
+        
+        // Load comment count
+        if (commentCountEl) {
+            fetch('/api/posts/' + postId + '/comments')
+            .then(res => res.json())
+            .then(data => {
+                commentCountEl.textContent = data.total || 0;
+            })
+            .catch(() => {
+                commentCountEl.textContent = '0';
+            });
+        }
+    }
+    
+    // Max comments to show initially
+    const INITIAL_COMMENTS_LIMIT = 5;
+    
+    // Load comments for a post
+    function loadComments(postId, article, showAll = false) {
+        const commentsList = article.querySelector('.comments-list');
+        const countSpan = article.querySelector('.comment-count');
+        const commentsSection = article.querySelector('.comments-section');
+
+        article.dataset.commentsShowAll = showAll ? 'true' : 'false';
+        
+        return fetch('/api/posts/' + postId + '/comments')
+        .then(res => res.json())
+        .then(data => {
+            countSpan.textContent = data.total;
+            commentsList.innerHTML = '';
+            
+            // Remove existing "show more" button
+            const existingShowMore = commentsSection.querySelector('.show-more-comments');
+            if (existingShowMore) existingShowMore.remove();
+            
+            const comments = data.comments;
+            const hasMore = comments.length > INITIAL_COMMENTS_LIMIT && !showAll;
+            const commentsToShow = hasMore ? comments.slice(-INITIAL_COMMENTS_LIMIT) : comments;
+            const hiddenCount = comments.length - INITIAL_COMMENTS_LIMIT;
+            
+            // Add "show earlier comments" button at top if there are hidden comments
+            if (hasMore) {
+                const showMoreBtn = document.createElement('button');
+                showMoreBtn.type = 'button';
+                showMoreBtn.className = 'show-more-comments w-full py-2 text-sm font-medium text-center rounded-md mb-3 transition-colors hover:bg-light-bg dark:hover:bg-dark-bg';
+                showMoreBtn.style.color = '{{ theme_color or "#4da9a4" }}';
+                showMoreBtn.innerHTML = `<span class="flex items-center justify-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg> ${hiddenCount} ${window.I18N.older_comments}</span>`;
+                showMoreBtn.addEventListener('click', function() {
+                    loadComments(postId, article, true);
+                });
+                commentsList.before(showMoreBtn);
+            }
+            
+            commentsToShow.forEach(comment => {
+                commentsList.appendChild(renderComment(comment, postId));
+            });
+            
+            if (comments.length === 0) {
+                commentsList.innerHTML = '<p class="text-sm text-light-text-muted dark:text-dark-text-muted">' + window.I18N.no_comments + '</p>';
+            }
+            
+            // Add max-height with scroll if showing all and many comments
+            if (showAll && comments.length > 10) {
+                commentsList.style.maxHeight = '400px';
+                commentsList.style.overflowY = 'auto';
+                commentsList.style.paddingRight = '8px';
+                // Scroll to bottom to show newest
+                commentsList.scrollTop = commentsList.scrollHeight;
+            } else {
+                commentsList.style.maxHeight = '';
+                commentsList.style.overflowY = '';
+                commentsList.style.paddingRight = '';
+            }
+        });
+    }
+    
+    // Current user ID for checking own profile links (passed from template)
+    const currentUserId = {{ current_user_id if current_user_id else 'null' }};
+    
+    // Render a comment
+    function renderComment(comment, postId, depth = 0) {
+        const div = document.createElement('div');
+        div.className = 'comment' + (depth > 0 ? ' ml-5 pl-3 border-l-2 border-light-border dark:border-dark-border' : '');
+        div.dataset.commentId = comment.id;
+
+        const canReply = depth < 3;
+        
+        const isDeletedAuthor = !!(comment.author && comment.author.is_deleted);
+        // Use /me for own profile, /u/username for others (use == for type coercion)
+        const isOwnComment = !isDeletedAuthor && currentUserId !== null && comment.author.id == currentUserId;
+        const profileUrl = isDeletedAuthor ? null : (isOwnComment ? '/me' : '/u/' + comment.author.username);
+        const avatarInitial = isDeletedAuthor ? (window.I18N.deleted_user || 'D')[0].toUpperCase() : (comment.author.display_name || comment.author.username || '?')[0].toUpperCase();
+        const avatarCore = comment.author.avatar_url
+            ? `<img src="${comment.author.avatar_url}" alt="Avatar" class="w-6 h-6 rounded-full">`
+            : `<div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background-color: ${comment.author.theme_color || '#6b7280'}">${avatarInitial}</div>`;
+        const avatarHtml = profileUrl
+            ? `<a href="${profileUrl}" class="flex-shrink-0 hover:opacity-80 transition-opacity">${avatarCore}</a>`
+            : `<span class="flex-shrink-0">${avatarCore}</span>`;
+        
+        const editedBadge = comment.is_edited ? `<span class="text-xs text-light-text-muted dark:text-dark-text-muted">(${window.I18N.edited})</span>` : '';
+        const actionButtons = isOwnComment ? `
+            <button type="button" class="comment-edit-btn p-1 text-light-text-muted dark:text-dark-text-muted hover:text-brand-teal transition-colors" title="${window.I18N.edit}">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            </button>
+            <button type="button" class="comment-delete-btn p-1 text-light-text-muted dark:text-dark-text-muted hover:text-red-500 transition-colors" title="${window.I18N.delete}">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
+        ` : '';
+        
+        const replyHtml = canReply
+            ? `<button type="button" class="reply-btn text-xs hover:underline" style="color: {{ theme_color or '#4da9a4' }}">${window.I18N.reply}</button>`
+            : ``;
+
+        div.innerHTML = `
+            <div class="flex items-start gap-2 group">
+                ${avatarHtml}
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        ${profileUrl
+                            ? `<a href="${profileUrl}" class="text-sm font-medium hover:underline">${comment.author.display_name || comment.author.username}</a>`
+                            : `<span class="text-sm font-medium">${window.I18N.deleted_user}</span>`
+                        }
+                        <span class="text-xs text-light-text-muted dark:text-dark-text-muted">${comment.created_at}</span>
+                        ${editedBadge}
+                        <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ml-auto">
+                            ${actionButtons}
+                        </div>
+                    </div>
+                    <div class="comment-content-wrapper">
+                        <p class="comment-text text-sm text-light-text-secondary dark:text-dark-text-secondary mt-0.5">${comment.content}</p>
+                    </div>
+                    <div class="mt-1 flex flex-col gap-2">
+                        <div class="comment-reaction-display flex items-center gap-1 text-xs"></div>
+                        <div class="flex items-center gap-3 flex-wrap">
+                            <div class="comment-reactions relative" data-comment-id="${comment.id}">
+                            <button type="button" class="comment-reaction-trigger inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-light-bg dark:bg-dark-bg hover:opacity-90 transition-opacity" title="Reagieren">
+                                <span class="comment-reaction-emoji">😊</span>
+                                <span class="comment-reaction-count text-light-text-muted dark:text-dark-text-muted"></span>
+                            </button>
+                            <div class="comment-reaction-picker hidden absolute z-50 mt-1 p-2 rounded-lg shadow-lg glass-card" style="min-width: 180px;">
+                                <div class="flex items-center gap-1 flex-wrap">
+                                    ${['👍','❤️','😂','😮','😢','🎉'].map(e => `<button type="button" class="comment-reaction-option p-1.5 rounded-md hover:bg-light-bg dark:hover:bg-dark-bg transition-colors" data-emoji="${e}">${e}</button>`).join('')}
+                                </div>
+                                <div class="mt-2 pt-2 border-t border-light-border dark:border-dark-border">
+                                    <button type="button" class="comment-reaction-remove text-xs text-light-text-muted dark:text-dark-text-muted hover:text-red-500 transition-colors">${window.I18N.remove_reaction}</button>
+                                </div>
+                            </div>
+                            </div>
+                            ${replyHtml}
+                        </div>
+                    </div>
+                    <div class="reply-form-wrapper hidden"></div>
+                </div>
+            </div>
+        `;
+        
+        // Add event listeners for edit/delete
+        if (isOwnComment) {
+            const editBtn = div.querySelector('.comment-edit-btn');
+            const deleteBtn = div.querySelector('.comment-delete-btn');
+            
+            editBtn.addEventListener('click', function() {
+                startEditComment(div, comment, postId);
+            });
+            
+            deleteBtn.addEventListener('click', function() {
+                deleteComment(div, comment.id, postId);
+            });
+        }
+
+        const replyBtn = div.querySelector('.reply-btn');
+        if (replyBtn) {
+            replyBtn.addEventListener('click', function() {
+                toggleReplyForm(div, comment, postId);
+            });
+        }
+
+        initCommentReactions(div);
+        
+        if (comment.replies && comment.replies.length > 0) {
+            const replyCount = comment.replies.length;
+            const repliesContainer = document.createElement('div');
+            repliesContainer.className = 'replies-container mt-2 hidden';
+            
+            comment.replies.forEach(reply => {
+                repliesContainer.appendChild(renderComment(reply, postId, depth + 1));
+            });
+            
+            const toggleBtn = document.createElement('button');
+            toggleBtn.type = 'button';
+            toggleBtn.className = 'replies-toggle flex items-center gap-1 text-xs mt-2 hover:underline transition-colors';
+            toggleBtn.style.color = '{{ theme_color or "#4da9a4" }}';
+            toggleBtn.innerHTML = `<svg class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg> <span>${replyCount} ${replyCount === 1 ? window.I18N.reply_singular : window.I18N.replies_plural} ${window.I18N.show_replies.split(' ')[0]}</span>`;
+            
+            toggleBtn.addEventListener('click', function() {
+                const isHidden = repliesContainer.classList.contains('hidden');
+                repliesContainer.classList.toggle('hidden');
+                const icon = toggleBtn.querySelector('svg');
+                const text = toggleBtn.querySelector('span');
+                if (isHidden) {
+                    icon.style.transform = 'rotate(180deg)';
+                    text.textContent = window.I18N.hide_replies;
+                } else {
+                    icon.style.transform = '';
+                    text.textContent = `${replyCount} ${replyCount === 1 ? window.I18N.reply_singular : window.I18N.replies_plural}`;
+                }
+            });
+            
+            div.appendChild(toggleBtn);
+            div.appendChild(repliesContainer);
+        }
+        
+        return div;
+    }
+
+    function initCommentReactions(commentDiv) {
+        const container = commentDiv.querySelector('.comment-reactions');
+        if (!container || container.dataset.initialized) return;
+        container.dataset.initialized = 'true';
+
+        const commentId = container.dataset.commentId;
+        const trigger = container.querySelector('.comment-reaction-trigger');
+        const emojiSpan = container.querySelector('.comment-reaction-emoji');
+        const countSpan = container.querySelector('.comment-reaction-count');
+        const display = commentDiv.querySelector('.comment-reaction-display');
+        const picker = container.querySelector('.comment-reaction-picker');
+        const removeBtn = container.querySelector('.comment-reaction-remove');
+
+        function closePicker() {
+            if (picker) picker.classList.add('hidden');
+            if (activeCommentReactionContainer === container) {
+                activeCommentReactionPicker = null;
+                activeCommentReactionContainer = null;
+            }
+        }
+
+        function openPicker() {
+            if (!picker) return;
+            if (activeCommentReactionContainer && activeCommentReactionContainer !== container) {
+                closeActiveCommentReactionPicker();
+            }
+            picker.classList.remove('hidden');
+            activeCommentReactionPicker = picker;
+            activeCommentReactionContainer = container;
+        }
+
+        function updateUI(data) {
+            const total = data.total || 0;
+            const userReaction = data.user_reaction;
+            const reactions = data.reactions || {};
+
+            emojiSpan.textContent = userReaction || '😊';
+            countSpan.textContent = '';
+            if (removeBtn) removeBtn.style.display = userReaction ? '' : 'none';
+
+            if (!display) return;
+            if (!total) {
+                display.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            for (const [emoji, info] of Object.entries(reactions)) {
+                const count = info && info.count ? info.count : 0;
+                if (!count) continue;
+                const usersText = (info.users && info.users.length) ? info.users.join(', ') : 'Anonym';
+                html += `<span class="reaction-badge group relative inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full cursor-default transition-all duration-200 hover:scale-105" style="overflow:visible">
+                    <span class="text-sm">${emoji}</span>
+                    <span class="text-xs text-light-text-muted dark:text-dark-text-muted font-medium">${count}</span>
+                    <span class="reaction-tooltip pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 text-xs text-white bg-gray-900 dark:bg-gray-800 rounded-lg shadow-lg opacity-0 invisible transition-all duration-200 z-[100]" style="white-space:nowrap;max-width:none">
+                        <b>${count}× ${emoji}</b> ${usersText}
+                        <span class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></span>
+                    </span>
+                </span>`;
+            }
+            display.innerHTML = html;
+        }
+
+        function load() {
+            fetchJson('/api/comments/' + commentId + '/reactions')
+            .then(updateUI)
+            .catch(() => {});
+        }
+
+        function send(emoji) {
+            fetchJson('/api/comments/' + commentId + '/reactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ emoji })
+            })
+            .then(() => {
+                closePicker();
+                load();
+            })
+            .catch(err => {
+                closePicker();
+                const msg = (err && err.data && err.data.error) ? err.data.error : null;
+                if (msg) {
+                    alert(msg);
+                    return;
+                }
+                alert(window.I18N.login_to_react);
+            });
+        }
+
+        if (trigger) {
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (picker.classList.contains('hidden')) {
+                    openPicker();
+                } else {
+                    closePicker();
+                }
+            });
+        }
+
+        if (picker) {
+            picker.querySelectorAll('.comment-reaction-option').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    send(this.dataset.emoji);
+                });
+            });
+        }
+
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const currentEmoji = emojiSpan.textContent;
+                if (currentEmoji && currentEmoji !== '😊') {
+                    send(currentEmoji);
+                } else {
+                    closePicker();
+                }
+            });
+        }
+
+        load();
+    }
+
+    function toggleReplyForm(commentDiv, comment, postId) {
+        const wrapper = commentDiv.querySelector('.reply-form-wrapper');
+        if (!wrapper) return;
+
+        if (!wrapper.classList.contains('hidden')) {
+            wrapper.classList.add('hidden');
+            wrapper.innerHTML = '';
+            return;
+        }
+
+        wrapper.classList.remove('hidden');
+        wrapper.innerHTML = `
+            <form class="reply-form flex flex-wrap gap-2 mt-2">
+                <input type="text" class="reply-input flex-1 min-w-0 px-3 py-2 text-sm rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg focus:outline-none focus:ring-2 focus:ring-brand-teal" placeholder="${window.I18N.reply}...">
+                <button type="submit" class="reply-submit px-3 py-2 text-sm font-medium text-white rounded-md" style="background-color: {{ theme_color or '#4da9a4' }}">${window.I18N.send}</button>
+                <button type="button" class="reply-cancel px-3 py-2 text-sm font-medium text-light-text-muted dark:text-dark-text-muted hover:text-light-text-primary dark:hover:text-dark-text-primary">${window.I18N.cancel}</button>
+            </form>
+        `;
+
+        const input = wrapper.querySelector('.reply-input');
+        const cancelBtn = wrapper.querySelector('.reply-cancel');
+        const form = wrapper.querySelector('.reply-form');
+        if (input) input.focus();
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                wrapper.classList.add('hidden');
+                wrapper.innerHTML = '';
+            });
+        }
+
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const content = input.value.trim();
+                if (!content) return;
+
+                fetch('/api/posts/' + postId + '/comments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: content, parent_id: comment.id })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) return;
+
+                    wrapper.classList.add('hidden');
+                    wrapper.innerHTML = '';
+
+                    const article = commentDiv.closest('article');
+                    if (!article) return;
+
+                    loadComments(postId, article, true).then(() => {
+                        const newCommentId = data.comment && data.comment.id;
+                        if (!newCommentId) return;
+                        const el = article.querySelector(`[data-comment-id="${newCommentId}"]`);
+                        if (el) el.scrollIntoView({ block: 'nearest' });
+                    });
+                });
+            });
+        }
+    }
+    
+    // Start editing a comment
+    function startEditComment(commentDiv, comment, postId) {
+        const contentWrapper = commentDiv.querySelector('.comment-content-wrapper');
+        const originalContent = comment.content;
+        
+        contentWrapper.innerHTML = `
+            <div class="mt-1">
+                <textarea class="comment-edit-input w-full px-3 py-2 text-sm rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-2 focus:ring-brand-teal resize-none" rows="2">${originalContent}</textarea>
+                <div class="flex items-center gap-2 mt-2">
+                    <button type="button" class="save-edit-btn px-3 py-1 text-xs font-medium text-white bg-brand-teal rounded-md hover:bg-brand-blue transition-colors">${window.I18N.save}</button>
+                    <button type="button" class="cancel-edit-btn px-3 py-1 text-xs font-medium text-light-text-muted dark:text-dark-text-muted hover:text-light-text-primary dark:hover:text-dark-text-primary transition-colors">${window.I18N.cancel}</button>
+                </div>
+            </div>
+        `;
+        
+        const textarea = contentWrapper.querySelector('.comment-edit-input');
+        const saveBtn = contentWrapper.querySelector('.save-edit-btn');
+        const cancelBtn = contentWrapper.querySelector('.cancel-edit-btn');
+        
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        
+        saveBtn.addEventListener('click', function() {
+            const newContent = textarea.value.trim();
+            if (!newContent) return;
+            
+            fetch('/api/comments/' + comment.id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: newContent })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    comment.content = newContent;
+                    comment.is_edited = true;
+                    contentWrapper.innerHTML = `<p class="comment-text text-sm text-light-text-secondary dark:text-dark-text-secondary mt-0.5">${newContent}</p>`;
+                    // Update edited badge
+                    const headerDiv = commentDiv.querySelector('.flex.items-center.gap-2.flex-wrap');
+                    if (headerDiv && !headerDiv.querySelector('.text-xs:nth-child(3)')) {
+                        const badge = document.createElement('span');
+                        badge.className = 'text-xs text-light-text-muted dark:text-dark-text-muted';
+                        badge.textContent = `(${window.I18N.edited})`;
+                        headerDiv.insertBefore(badge, headerDiv.querySelector('.flex.items-center.gap-0\\.5'));
+                    }
+                } else {
+                    alert(data.error || window.I18N.error_saving);
+                }
+            });
+        });
+        
+        cancelBtn.addEventListener('click', function() {
+            contentWrapper.innerHTML = `<p class="comment-text text-sm text-light-text-secondary dark:text-dark-text-secondary mt-0.5">${originalContent}</p>`;
+        });
+    }
+    
+    // Delete a comment
+    function deleteComment(commentDiv, commentId, postId) {
+        function doDelete() {
+            fetch('/api/comments/' + commentId, {
+                method: 'DELETE'
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const article = document.querySelector(`[data-post-id="${postId}"]`)?.closest('article');
+                    if (!article) {
+                        commentDiv.remove();
+                        return;
+                    }
+
+                    const showAll = article.dataset.commentsShowAll === 'true';
+                    loadComments(postId, article, showAll);
+                } else {
+                    alert(data.error || window.I18N.error_deleting);
+                }
+            });
+        }
+
+        if (window.confirmModal && window.confirmModal.show) {
+            window.confirmModal.show({
+                title: window.I18N.delete_comment,
+                message: window.I18N.delete_comment_confirm,
+                confirmText: window.I18N.delete,
+                confirmClass: 'bg-red-600 hover:bg-red-700',
+                action: doDelete
+            });
+            return;
+        }
+
+        if (!confirm(window.I18N.delete_comment_confirm)) return;
+        doDelete();
+    }
+    
+    // Initialize comments toggle
+    function initCommentToggle(article) {
+        const btn = article.querySelector('.comment-toggle-btn');
+        if (btn && !btn.dataset.initialized) {
+            btn.dataset.initialized = 'true';
+            btn.addEventListener('click', function() {
+                const commentsSection = article.querySelector('.comments-section');
+                const postReactions = this.closest('.post-reactions');
+                const postId = postReactions.dataset.postId;
+                
+                if (commentsSection.classList.contains('hidden')) {
+                    commentsSection.classList.remove('hidden');
+                    loadComments(postId, article);
+                } else {
+                    commentsSection.classList.add('hidden');
+                }
+            });
+        }
+    }
+    
+    // Initialize comment form
+    function initCommentForm(article) {
+        const form = article.querySelector('.comment-form');
+        if (form && !form.dataset.initialized) {
+            form.dataset.initialized = 'true';
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const postReactions = article.querySelector('.post-reactions');
+                const postId = postReactions.dataset.postId;
+                const input = this.querySelector('.comment-input');
+                const content = input.value.trim();
+                
+                if (!content) return;
+                
+                fetch('/api/posts/' + postId + '/comments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: content })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        input.value = '';
+                        // Load with showAll to keep context, scroll to new comment
+                        loadComments(postId, article, true);
+                    }
+                });
+            });
+        }
+    }
+    
+    // Initialize reaction buttons for visitor view
+    function initReactionButtons(article) {
+        const postReactions = article.querySelector('.post-reactions');
+        if (!postReactions || postReactions.dataset.isOwner === 'true') return;
+        
+        const postId = postReactions.dataset.postId;
+        const reactionsContainer = article.querySelector('.reactions-container');
+        const userReactionDiv = article.querySelector('.user-reaction');
+        const reactionOptions = article.querySelector('.reaction-options');
+        const userEmojiSpan = article.querySelector('.user-emoji');
+        const userReactionBtn = article.querySelector('.user-reaction-btn');
+        const reactionsDisplay = article.querySelector('.reactions-display');
+        
+        if (!reactionsContainer) return;
+        
+        // Update reactions display with tooltips
+        function updateReactionsDisplay(reactionsData) {
+            if (!reactionsDisplay) return;
+            let html = '';
+            for (const [emoji, info] of Object.entries(reactionsData)) {
+                if (info.count > 0) {
+                    const usersText = info.users.length > 0 ? info.users.join(', ') : window.I18N.anonymous;
+                    html += `<span class="reaction-badge group relative inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-light-bg dark:bg-dark-bg cursor-default transition-all duration-200 hover:scale-105" style="overflow:visible">
+                        <span class="text-sm">${emoji}</span>
+                        <span class="text-xs text-light-text-muted dark:text-dark-text-muted font-medium">${info.count}</span>
+                        <span class="reaction-tooltip pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 text-xs text-white bg-gray-900 dark:bg-gray-800 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[100]" style="white-space:nowrap;max-width:none">
+                            <b>${info.count}× ${emoji}</b> ${usersText}
+                            <span class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></span>
+                        </span>
+                    </span>`;
+                }
+            }
+            reactionsDisplay.innerHTML = html;
+        }
+        
+        // Show user's reaction (hide options)
+        function showUserReaction(emoji) {
+            userEmojiSpan.textContent = emoji;
+            userReactionDiv.classList.remove('hidden');
+            reactionOptions.classList.add('hidden');
+            // Animate
+            userReactionBtn.style.transform = 'scale(0)';
+            setTimeout(() => {
+                userReactionBtn.style.transform = 'scale(1)';
+            }, 50);
+        }
+        
+        // Show all reaction options (hide user reaction)
+        function showReactionOptions() {
+            userReactionDiv.classList.add('hidden');
+            reactionOptions.classList.remove('hidden');
+            // Animate options appearing
+            const btns = reactionOptions.querySelectorAll('.reaction-btn');
+            btns.forEach((btn, i) => {
+                btn.style.opacity = '0';
+                btn.style.transform = 'scale(0.5)';
+                setTimeout(() => {
+                    btn.style.opacity = '1';
+                    btn.style.transform = 'scale(1)';
+                }, i * 30);
+            });
+        }
+        
+        // Handle clicking on a reaction option
+        function handleReactionClick(emoji) {
+            fetch('/api/posts/' + postId + '/reactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ emoji: emoji })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    console.error(data.error);
+                    return;
+                }
+                if (data.action === 'added') {
+                    showUserReaction(emoji);
+                } else {
+                    showReactionOptions();
+                }
+                // Reload reactions display
+                loadReactionsForPost(postId);
+            });
+        }
+        
+        // Load reactions for this post
+        function loadReactionsForPost(postId) {
+            fetch('/api/posts/' + postId + '/reactions')
+            .then(res => res.json())
+            .then(data => {
+                updateReactionsDisplay(data.reactions);
+                // Check if user has reacted
+                if (data.user_reactions && data.user_reactions.length > 0) {
+                    showUserReaction(data.user_reactions[0]);
+                } else {
+                    showReactionOptions();
+                }
+            });
+        }
+        
+        // Initialize reaction buttons
+        const reactionBtns = article.querySelectorAll('.reaction-btn');
+        reactionBtns.forEach(btn => {
+            if (btn.dataset.initialized) return;
+            btn.dataset.initialized = 'true';
+            btn.addEventListener('click', function() {
+                handleReactionClick(this.dataset.emoji);
+            });
+        });
+        
+        // Initialize user reaction button (click to change/remove)
+        if (userReactionBtn && !userReactionBtn.dataset.initialized) {
+            userReactionBtn.dataset.initialized = 'true';
+            userReactionBtn.addEventListener('click', function() {
+                const currentEmoji = userEmojiSpan.textContent;
+                // Remove current reaction
+                handleReactionClick(currentEmoji);
+            });
+        }
+        
+        // Load initial state
+        loadReactionsForPost(postId);
+    }
+    
+    // Initialize bookmark button
+    function initBookmarkButton(article) {
+        const postReactions = article.querySelector('.post-reactions');
+        if (!postReactions) return;
+        
+        const bookmarkBtn = article.querySelector('.bookmark-btn');
+        if (!bookmarkBtn || bookmarkBtn.dataset.initialized) return;
+        
+        bookmarkBtn.dataset.initialized = 'true';
+        const postId = postReactions.dataset.postId;
+        const goldColor = '#f5c542';
+        function setBookmarked(icon) {
+            icon.setAttribute('fill', goldColor);
+            icon.setAttribute('stroke', goldColor);
+        }
+        function setUnbookmarked(icon) {
+            icon.setAttribute('fill', 'none');
+            icon.setAttribute('stroke', 'currentColor');
+        }
+        
+        // Check initial state
+        fetch('/api/posts/' + postId + '/bookmark')
+        .then(res => res.json())
+        .then(data => {
+            if (data.bookmarked) {
+                const icon = bookmarkBtn.querySelector('.bookmark-icon');
+                if (icon) setBookmarked(icon);
+            }
+        });
+        
+        bookmarkBtn.addEventListener('click', function() {
+            fetch('/api/posts/' + postId + '/bookmark', {
+                method: 'POST'
+            })
+            .then(res => res.json())
+            .then(data => {
+                const icon = this.querySelector('.bookmark-icon');
+                if (data.bookmarked) {
+                    if (icon) setBookmarked(icon);
+                } else {
+                    if (icon) setUnbookmarked(icon);
+                }
+            });
+        });
+    }
+    
+    // Initialize all interactions for an article
+    function initArticleInteractions(article) {
+        initPostCollapse(article);
+        initCommentToggle(article);
+        initCommentForm(article);
+        initReactionButtons(article);
+        initBookmarkButton(article);
+        const postReactions = article.querySelector('.post-reactions');
+        if (postReactions) {
+            loadReactionsSummary(postReactions);
+        }
+        
+        // Auto-open comments on single post pages
+        const singlePostContainer = article.querySelector('[data-single-post="true"]');
+        if (singlePostContainer) {
+            const commentsSection = article.querySelector('.comments-section');
+            const postId = postReactions ? postReactions.dataset.postId : null;
+            if (commentsSection && postId) {
+                commentsSection.classList.remove('hidden');
+                loadComments(postId, article);
+            }
+        }
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('article').forEach(article => {
+            initArticleInteractions(article);
+        });
+        
+        // Auto-load comments for sections with data-auto-load
+        document.querySelectorAll('.comments-section[data-auto-load="true"]').forEach(section => {
+            const postId = section.dataset.postId;
+            const commentsList = section.querySelector('.comments-list');
+            const countSpan = section.querySelector('.comment-count');
+            
+            if (postId && commentsList) {
+                loadAutoComments(postId, section, commentsList, countSpan, false);
+                
+                // Initialize comment form for this section
+                const form = section.querySelector('.comment-form');
+                if (form && !form.dataset.initialized) {
+                    form.dataset.initialized = 'true';
+                    form.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        const input = this.querySelector('.comment-input');
+                        const content = input.value.trim();
+                        if (!content) return;
+                        
+                        fetch('/api/posts/' + postId + '/comments', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ content: content })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                input.value = '';
+                                loadAutoComments(postId, section, commentsList, countSpan, true);
+                            }
+                        });
+                    });
+                }
+            }
+        });
+    });
+    
+    // Helper for auto-load sections
+    function loadAutoComments(postId, section, commentsList, countSpan, showAll) {
+        fetch('/api/posts/' + postId + '/comments')
+        .then(res => res.json())
+        .then(data => {
+            if (countSpan) countSpan.textContent = data.total || 0;
+            commentsList.innerHTML = '';
+            
+            // Remove existing "show more" button
+            const existingShowMore = section.querySelector('.show-more-comments');
+            if (existingShowMore) existingShowMore.remove();
+            
+            const comments = data.comments || [];
+            const hasMore = comments.length > INITIAL_COMMENTS_LIMIT && !showAll;
+            const commentsToShow = hasMore ? comments.slice(-INITIAL_COMMENTS_LIMIT) : comments;
+            const hiddenCount = comments.length - INITIAL_COMMENTS_LIMIT;
+            
+            // Add "show earlier comments" button
+            if (hasMore) {
+                const showMoreBtn = document.createElement('button');
+                showMoreBtn.type = 'button';
+                showMoreBtn.className = 'show-more-comments w-full py-2 text-sm font-medium text-center rounded-md mb-3 transition-colors hover:bg-light-bg dark:hover:bg-dark-bg';
+                showMoreBtn.style.color = '{{ theme_color or "#4da9a4" }}';
+                showMoreBtn.innerHTML = `<span class="flex items-center justify-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg> ${hiddenCount} ${window.I18N.older_comments}</span>`;
+                showMoreBtn.addEventListener('click', function() {
+                    loadAutoComments(postId, section, commentsList, countSpan, true);
+                });
+                commentsList.before(showMoreBtn);
+            }
+            
+            if (commentsToShow.length > 0) {
+                commentsToShow.forEach(comment => {
+                    commentsList.appendChild(renderComment(comment, postId));
+                });
+            } else {
+                commentsList.innerHTML = '<p class="text-sm text-light-text-muted dark:text-dark-text-muted">' + window.I18N.no_comments + '</p>';
+            }
+            
+            // Add scroll for many comments
+            if (showAll && comments.length > 10) {
+                commentsList.style.maxHeight = '400px';
+                commentsList.style.overflowY = 'auto';
+                commentsList.style.paddingRight = '8px';
+                commentsList.scrollTop = commentsList.scrollHeight;
+            } else {
+                commentsList.style.maxHeight = '';
+                commentsList.style.overflowY = '';
+                commentsList.style.paddingRight = '';
+            }
+        })
+        .catch(() => {
+            commentsList.innerHTML = '<p class="text-sm text-light-text-muted dark:text-dark-text-muted">' + window.I18N.error_loading + '</p>';
+        });
+    }
+</script>
+{% endmacro %}
+

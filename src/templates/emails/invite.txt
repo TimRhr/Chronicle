@@ -1,0 +1,10 @@
+{{ _('You are invited to Chronicle') }}
+
+{{ _('You have been invited to join Chronicle. Use the link below to create your account.') }}
+
+{{ _('Invitation code') }}: {{ invite_code }}
+
+{{ _('Create account') }}:
+{{ invite_url }}
+
+{{ _('This invitation link can be used only once.') }}

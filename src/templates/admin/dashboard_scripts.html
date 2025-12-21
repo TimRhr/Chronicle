@@ -1,0 +1,110 @@
+<script>
+    Chart.defaults.color = 'rgba(255, 255, 255, 0.6)';
+    Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    
+    const timeRange = document.getElementById('time-range');
+    let activityChart, growthChart, engagementPie;
+    
+    async function loadActivityChart() {
+        const days = timeRange.value;
+        const response = await fetch(`/analytics/api/charts/activity?days=${days}`);
+        const data = await response.json();
+        const ctx = document.getElementById('activityChart').getContext('2d');
+        if (activityChart) activityChart.destroy();
+        activityChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels.map(d => new Date(d).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })),
+                datasets: [
+                    { label: 'Posts', data: data.posts, borderColor: '#4da9a4', backgroundColor: 'rgba(77, 169, 164, 0.1)', fill: true, tension: 0.4, borderWidth: 2 },
+                    { label: 'Comments', data: data.comments, borderColor: '#60a5fa', backgroundColor: 'rgba(96, 165, 250, 0.1)', fill: true, tension: 0.4, borderWidth: 2 },
+                    { label: 'Reactions', data: data.reactions, borderColor: '#f472b6', backgroundColor: 'rgba(244, 114, 182, 0.1)', fill: true, tension: 0.4, borderWidth: 2 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: { legend: { display: false } },
+                scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } }, y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.05)' } } }
+            }
+        });
+    }
+    
+    async function loadGrowthChart() {
+        const days = timeRange.value;
+        const response = await fetch(`/analytics/api/charts/growth?days=${days}`);
+        const data = await response.json();
+        const ctx = document.getElementById('growthChart').getContext('2d');
+        if (growthChart) growthChart.destroy();
+        growthChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels.map(d => new Date(d).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })),
+                datasets: [
+                    { label: 'Users', data: data.users, borderColor: '#4da9a4', backgroundColor: 'rgba(77, 169, 164, 0.2)', fill: true, tension: 0.4, borderWidth: 2 },
+                    { label: 'Posts', data: data.posts, borderColor: '#a78bfa', backgroundColor: 'rgba(167, 139, 250, 0.2)', fill: true, tension: 0.4, borderWidth: 2 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: { legend: { display: false } },
+                scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } }, y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.05)' } } }
+            }
+        });
+    }
+    
+    function loadEngagementPie() {
+        const ctx = document.getElementById('engagementPie').getContext('2d');
+        if (engagementPie) engagementPie.destroy();
+        engagementPie = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Reactions', 'Comments', 'Bookmarks'],
+                datasets: [{
+                    data: [{{ kpis.reactions.total }}, {{ kpis.comments.total }}, {{ kpis.bookmarks.total }}],
+                    backgroundColor: ['rgba(244, 114, 182, 0.8)', 'rgba(96, 165, 250, 0.8)', 'rgba(251, 191, 36, 0.8)'],
+                    borderColor: ['rgba(244, 114, 182, 1)', 'rgba(96, 165, 250, 1)', 'rgba(251, 191, 36, 1)'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '60%',
+                plugins: { legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true } } }
+            }
+        });
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        loadActivityChart();
+        loadGrowthChart();
+        loadEngagementPie();
+        timeRange.addEventListener('change', function() { loadActivityChart(); loadGrowthChart(); });
+        
+        // Smooth scroll nav
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href.startsWith('#')) {
+                    e.preventDefault();
+                    const target = document.querySelector(href);
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                    }
+                }
+            });
+        });
+        
+        // Auto-refresh stats every 60s
+        setInterval(async () => {
+            try {
+                const response = await fetch('/analytics/api/stats/realtime');
+                const data = await response.json();
+                console.log('Stats updated:', data.timestamp);
+            } catch (e) { console.error('Stats refresh failed:', e); }
+        }, 60000);
+    });
+</script>

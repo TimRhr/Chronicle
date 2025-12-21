@@ -1,0 +1,68 @@
+<!-- Image Lightbox Component -->
+<div id="image-lightbox" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" id="lightbox-backdrop"></div>
+    <div class="relative z-10 max-w-[90vw] max-h-[90vh]">
+        <img id="lightbox-image" src="" alt="" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl">
+        <button id="lightbox-close" class="absolute -top-4 -right-4 w-8 h-8 bg-light-surface dark:bg-dark-surface rounded-full shadow-lg flex items-center justify-center text-light-text-muted dark:text-dark-text-muted hover:text-light-text-primary dark:hover:text-dark-text-primary transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<script>
+    window.imageLightbox = {
+        show: function(src) {
+            const lightbox = document.getElementById('image-lightbox');
+            const img = document.getElementById('lightbox-image');
+            const appContent = document.getElementById('app-content');
+            
+            img.src = src;
+            lightbox.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            if (appContent) {
+                appContent.style.filter = 'blur(4px)';
+                appContent.style.pointerEvents = 'none';
+            }
+        },
+        
+        hide: function() {
+            const lightbox = document.getElementById('image-lightbox');
+            const appContent = document.getElementById('app-content');
+            
+            lightbox.classList.add('hidden');
+            document.body.style.overflow = '';
+            
+            if (appContent) {
+                appContent.style.filter = '';
+                appContent.style.pointerEvents = '';
+            }
+        }
+    };
+
+    // Close handlers
+    document.getElementById('lightbox-backdrop').addEventListener('click', function() {
+        window.imageLightbox.hide();
+    });
+    
+    document.getElementById('lightbox-close').addEventListener('click', function() {
+        window.imageLightbox.hide();
+    });
+    
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !document.getElementById('image-lightbox').classList.contains('hidden')) {
+            window.imageLightbox.hide();
+        }
+    });
+
+    // Use event delegation for lightbox images (works for dynamically loaded content)
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('lightbox-image')) {
+            window.imageLightbox.show(e.target.src);
+        }
+    });
+</script>
+

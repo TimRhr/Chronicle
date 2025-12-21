@@ -1,0 +1,927 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('New post') }} - Chronicle{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="font-heading text-2xl font-bold">{{ _('New post') }}</h1>
+        <a href="{{ next_url or url_for('blog.me') }}" class="text-sm text-light-text-muted dark:text-dark-text-muted hover:text-brand-teal transition-colors">
+            ← {{ _('Back') }}
+        </a>
+    </div>
+    
+    <form method="POST" enctype="multipart/form-data" class="space-y-6" id="post-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="next" value="{{ next_url or url_for('blog.me') }}">
+        <div class="glass-card p-6">
+            <div class="space-y-4">
+                <div>
+                    <label for="title" class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">
+                        {{ _('Title') }} ({{ _('optional') }})
+                    </label>
+                    <input type="text" id="title" name="title"
+                        class="w-full px-4 py-2 rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent"
+                        placeholder="{{ _('Title of your post') }}">
+                </div>
+                
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label for="content" class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary">
+                            {{ _('Content') }}
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <button type="button" id="toggle-preview" class="text-xs px-2 py-1 rounded text-light-text-muted dark:text-dark-text-muted hover:bg-light-bg dark:hover:bg-dark-bg transition-colors">
+                                {{ _('Preview') }}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="editor-toolbar flex flex-wrap items-center gap-1 mb-2 p-2 bg-light-bg dark:bg-dark-bg rounded-t-md border border-b-0 border-light-border dark:border-dark-border">
+                        <button type="button" data-action="bold" title="{{ _('Bold (Ctrl+B)') }}" class="toolbar-btn p-1.5 rounded hover:bg-light-surface dark:hover:bg-dark-surface text-light-text-secondary dark:text-dark-text-secondary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z"/></svg>
+                        </button>
+                        <button type="button" data-action="italic" title="{{ _('Italic (Ctrl+I)') }}" class="toolbar-btn p-1.5 rounded hover:bg-light-surface dark:hover:bg-dark-surface text-light-text-secondary dark:text-dark-text-secondary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 4h4m-2 0v16m-4 0h8"/></svg>
+                        </button>
+                        <button type="button" data-action="strikethrough" title="{{ _('Strikethrough') }}" class="toolbar-btn p-1.5 rounded hover:bg-light-surface dark:hover:bg-dark-surface text-light-text-secondary dark:text-dark-text-secondary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/></svg>
+                        </button>
+                        <div class="w-px h-5 bg-light-border dark:bg-dark-border mx-1"></div>
+                        <button type="button" data-action="heading" title="{{ _('Heading') }}" class="toolbar-btn p-1.5 rounded hover:bg-light-surface dark:hover:bg-dark-surface text-light-text-secondary dark:text-dark-text-secondary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h10M4 18h16"/></svg>
+                        </button>
+                        <button type="button" data-action="quote" title="{{ _('Quote') }}" class="toolbar-btn p-1.5 rounded hover:bg-light-surface dark:hover:bg-dark-surface text-light-text-secondary dark:text-dark-text-secondary">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 17h3l2-4V7H5v6h3l-2 4zm8 0h3l2-4V7h-6v6h3l-2 4z"/></svg>
+                        </button>
+                        <button type="button" data-action="code" title="{{ _('Code') }}" class="toolbar-btn p-1.5 rounded hover:bg-light-surface dark:hover:bg-dark-surface text-light-text-secondary dark:text-dark-text-secondary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                        </button>
+                        <div class="w-px h-5 bg-light-border dark:bg-dark-border mx-1"></div>
+                        <button type="button" data-action="ul" title="{{ _('List') }}" class="toolbar-btn p-1.5 rounded hover:bg-light-surface dark:hover:bg-dark-surface text-light-text-secondary dark:text-dark-text-secondary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        </button>
+                        <button type="button" data-action="ol" title="{{ _('Numbered list') }}" class="toolbar-btn p-1.5 rounded hover:bg-light-surface dark:hover:bg-dark-surface text-light-text-secondary dark:text-dark-text-secondary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h10M7 16h10M3 8h.01M3 12h.01M3 16h.01"/></svg>
+                        </button>
+                        <div class="w-px h-5 bg-light-border dark:bg-dark-border mx-1"></div>
+                        <button type="button" data-action="link" title="{{ _('Insert link') }}" class="toolbar-btn p-1.5 rounded hover:bg-light-surface dark:hover:bg-dark-surface text-light-text-secondary dark:text-dark-text-secondary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                        </button>
+                    </div>
+                    
+                    <div id="editor-container" class="relative">
+                        <textarea id="content" name="content" rows="10"
+                            class="w-full px-4 py-3 rounded-b-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent font-mono text-sm"
+                            placeholder="{{ _('What would you like to share?') }}"></textarea>
+                        
+                        <!-- @Mention Autocomplete Dropdown -->
+                        <div id="mention-dropdown" class="hidden absolute z-50 w-72 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg shadow-xl overflow-hidden">
+                            <div class="p-2 border-b border-light-border dark:border-dark-border">
+                                <input type="text" id="mention-search" class="w-full px-3 py-2 text-sm rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg focus:outline-none focus:ring-2 focus:ring-brand-teal" placeholder="{{ _('Search users...') }}">
+                            </div>
+                            <div id="mention-results" class="max-h-48 overflow-y-auto">
+                                <!-- Results will be populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="preview-container" class="hidden">
+                        <div id="content-preview" class="w-full min-h-[240px] px-4 py-3 rounded-b-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg prose dark:prose-invert max-w-none"></div>
+                    </div>
+                    
+                    <p class="mt-2 text-xs text-light-text-muted dark:text-dark-text-muted">
+                        {{ _('Markdown is supported: **bold**, *italic*, `code`, > quote, - list. Links are automatically embedded as previews.') }}
+                    </p>
+                </div>
+                
+                {% if not preselect_group %}
+                <div id="feed-destination-toggle" class="hidden p-3 rounded-lg border border-light-border dark:border-dark-border bg-light-bg/50 dark:bg-dark-bg/50">
+                    <div class="text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-2">{{ _('Where should the post appear?') }}</div>
+                    <div class="flex items-center gap-4">
+                        <label class="inline-flex items-center gap-2 text-sm text-light-text-secondary dark:text-dark-text-secondary cursor-pointer">
+                            <input type="radio" id="destination-profile" name="destination" value="profile" class="h-4 w-4 rounded-full border-light-border dark:border-dark-border text-brand-teal focus:ring-brand-teal">
+                            <span>{{ _('On my profile') }}</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2 text-sm text-light-text-secondary dark:text-dark-text-secondary cursor-pointer">
+                            <input type="radio" id="destination-group" name="destination" value="group" class="h-4 w-4 rounded-full border-light-border dark:border-dark-border text-brand-teal focus:ring-brand-teal">
+                            <span>{{ _('In a group') }}</span>
+                        </label>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {% if not preselect_group %}
+                    <div id="page-field" class="hidden">
+                        <label for="page_id" class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">
+                            {{ _('Page') }} ({{ _('optional') }})
+                        </label>
+                        <select id="page_id" name="page_id"
+                            class="w-full px-4 py-2 rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent">
+                            <option value="">{{ _('No page (overview only)') }}</option>
+                            {% for page in pages %}
+                            <option value="{{ page.id }}">{{ page.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+                    
+                    <div id="group-field" {% if not preselect_group %}class="hidden"{% endif %}>
+                        <label for="group_id" class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">
+                            {{ _('Group') }} ({{ _('optional') }})
+                        </label>
+                        <select id="group_id" name="group_id"
+                            class="w-full px-4 py-2 rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent">
+                            <option value="">{{ _('Public (everyone can see)') }}</option>
+                            {% for group in user_groups %}
+                            <option value="{{ group.id }}" {% if preselect_group and preselect_group.id == group.id %}selected{% endif %}>
+                                {{ group.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% if user_groups %}
+                        <p class="mt-1 text-xs text-light-text-muted dark:text-dark-text-muted">
+                            {{ _('Only group members can see this post.') }}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="show_in_feed" name="show_in_feed" checked
+                        class="h-4 w-4 rounded border-light-border dark:border-dark-border text-brand-teal focus:ring-brand-teal">
+                    <label for="show_in_feed" class="text-sm text-light-text-secondary dark:text-dark-text-secondary">
+                        {{ _('Show in feed') }}
+                    </label>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-2">
+                        {{ _('Tags') }} ({{ _('optional') }})
+                    </label>
+                    
+                    <!-- Selected tags display -->
+                    <div id="selected-tags" class="flex flex-wrap gap-2 mb-3">
+                        <!-- Selected tags will appear here -->
+                    </div>
+                    
+                    <!-- Tag search/select dropdown -->
+                    <div class="relative mb-3">
+                        <input type="text" id="tag-search" placeholder="{{ _('Search or create tag...') }}" 
+                            class="w-full px-3 py-2 text-sm rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-2 focus:ring-brand-teal"
+                            autocomplete="off">
+                        <div id="tag-dropdown" class="hidden absolute z-20 w-full mt-1 max-h-48 overflow-y-auto bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-md shadow-lg">
+                            <!-- Dropdown items will be populated by JS -->
+                        </div>
+                    </div>
+                    
+                    <!-- Hidden inputs for form submission -->
+                    <div id="tags-hidden-inputs"></div>
+                    
+                    <!-- Available tags data for JS -->
+                    <script id="available-tags" type="application/json">[{% for tag in tags %}{"id": {{ tag.id }}, "name": "{{ tag.name }}", "slug": "{{ tag.slug }}", "color": "{{ tag.color }}"}{% if not loop.last %}, {% endif %}{% endfor %}]</script>
+                </div>
+                
+                <!-- Poll Section -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary">
+                            {{ _('Poll') }} ({{ _('optional') }})
+                        </label>
+                        <button type="button" id="toggle-poll" class="text-sm text-brand-teal hover:underline">
+                            {{ _('+ Add poll') }}
+                        </button>
+                    </div>
+                    
+                    <div id="poll-section" class="hidden space-y-3 p-4 border border-light-border dark:border-dark-border rounded-lg bg-light-bg/50 dark:bg-dark-bg/50">
+                        <div>
+                            <input type="text" name="poll_question" id="poll-question" placeholder="{{ _('Poll question...') }}"
+                                class="w-full px-3 py-2 text-sm rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg focus:outline-none focus:ring-2 focus:ring-brand-teal">
+                        </div>
+                        
+                        <div id="poll-options" class="space-y-2">
+                            <div class="flex items-center gap-2">
+                                <input type="text" name="poll_options[]" placeholder="{{ _('Option 1') }}"
+                                    class="flex-1 px-3 py-2 text-sm rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg focus:outline-none focus:ring-2 focus:ring-brand-teal">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="text" name="poll_options[]" placeholder="{{ _('Option 2') }}"
+                                    class="flex-1 px-3 py-2 text-sm rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg focus:outline-none focus:ring-2 focus:ring-brand-teal">
+                            </div>
+                        </div>
+                        
+                        <button type="button" id="add-poll-option" class="text-sm text-brand-teal hover:underline">
+                            {{ _('+ Add option') }}
+                        </button>
+                        
+                        <div class="flex items-center gap-4 pt-2 border-t border-light-border dark:border-dark-border">
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="checkbox" name="poll_multiple" class="rounded border-light-border dark:border-dark-border text-brand-teal focus:ring-brand-teal">
+                                {{ _('Multiple choice') }}
+                            </label>
+                            <div class="flex items-center gap-2 text-sm">
+                                <span>{{ _('Ends') }}:</span>
+                                <input type="datetime-local" name="poll_ends_at" class="px-2 py-1 text-sm rounded border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg">
+                            </div>
+                        </div>
+                        
+                        <button type="button" id="remove-poll" class="text-sm text-red-500 hover:underline">
+                            {{ _('Remove poll') }}
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Scheduling Section -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary">
+                            {{ _('Schedule publication') }} ({{ _('optional') }})
+                        </label>
+                        <button type="button" id="toggle-schedule" class="text-sm text-brand-teal hover:underline">
+                            {{ _('+ Set time') }}
+                        </button>
+                    </div>
+                    
+                    <div id="schedule-section" class="hidden p-4 border border-light-border dark:border-dark-border rounded-lg bg-light-bg/50 dark:bg-dark-bg/50">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5 text-brand-teal flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <div class="flex-1">
+                                <input type="datetime-local" name="scheduled_at" id="scheduled_at"
+                                    min="{{ now.strftime('%Y-%m-%dT%H:%M') if now else '' }}"
+                                    class="w-full px-3 py-2 text-sm rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg focus:outline-none focus:ring-2 focus:ring-brand-teal">
+                                <p class="mt-1 text-xs text-light-text-muted dark:text-dark-text-muted">
+                                    {{ _('The post will only be visible in the feed at the selected time.') }}
+                                </p>
+                            </div>
+                        </div>
+                        <button type="button" id="remove-schedule" class="mt-3 text-sm text-red-500 hover:underline">
+                            {{ _('Remove schedule') }}
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-2">
+                        {{ _('Images') }} ({{ _('optional') }})
+                    </label>
+                    <div id="drop-zone" class="border-2 border-dashed border-light-border dark:border-dark-border rounded-lg p-6 text-center hover:border-brand-teal transition-colors cursor-pointer">
+                        <input type="file" id="images" name="images" multiple accept="image/*" class="hidden">
+                        <svg class="w-10 h-10 mx-auto mb-3 text-light-text-muted dark:text-dark-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <p class="text-sm text-light-text-secondary dark:text-dark-text-secondary mb-1">{{ _('Drag images here or click') }}</p>
+                        <p class="text-xs text-light-text-muted dark:text-dark-text-muted">{{ _('PNG, JPG, GIF, WebP allowed') }}</p>
+                    </div>
+                    <div id="image-previews" class="mt-3 grid grid-cols-4 gap-2"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex items-center justify-between">
+            <a href="{{ next_url or url_for('blog.me') }}" class="px-4 py-2 text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary hover:text-brand-teal transition-colors">
+                {{ _('Cancel') }}
+            </a>
+            <button type="submit" class="px-6 py-2 text-sm font-medium text-white rounded-md bg-brand-teal hover:bg-brand-blue transition-colors">
+                {{ _('Publish') }}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const content = document.getElementById('content');
+    const preview = document.getElementById('content-preview');
+    const editorContainer = document.getElementById('editor-container');
+    const previewContainer = document.getElementById('preview-container');
+    const togglePreview = document.getElementById('toggle-preview');
+    const postForm = document.getElementById('post-form');
+    const destinationToggle = document.getElementById('feed-destination-toggle');
+    const destinationProfile = document.getElementById('destination-profile');
+    const destinationGroup = document.getElementById('destination-group');
+    const pageField = document.getElementById('page-field');
+    const groupField = document.getElementById('group-field');
+    const pageSelect = document.getElementById('page_id');
+    const groupSelect = document.getElementById('group_id');
+    const dropZone = document.getElementById('drop-zone');
+    const imageInput = document.getElementById('images');
+    const imagePreviews = document.getElementById('image-previews');
+
+    function applyDestinationVisibility() {
+        if (!destinationProfile || !destinationGroup || !pageField || !groupField || !pageSelect || !groupSelect) return;
+
+        const profileMode = destinationProfile.checked;
+        const groupMode = destinationGroup.checked;
+
+        if (profileMode) {
+            pageField.classList.remove('hidden');
+            groupField.classList.add('hidden');
+            groupSelect.value = '';
+            return;
+        }
+
+        if (groupMode) {
+            groupField.classList.remove('hidden');
+            pageField.classList.add('hidden');
+            pageSelect.value = '';
+            return;
+        }
+
+        pageField.classList.add('hidden');
+        groupField.classList.add('hidden');
+    }
+
+    if (destinationToggle && destinationProfile && destinationGroup && pageField && groupField) {
+        destinationToggle.classList.remove('hidden');
+
+        // Default destination:
+        // - If a group is already selected (e.g. creating inside a group), default to group.
+        // - Otherwise default to profile.
+        if (groupSelect && groupSelect.value) {
+            destinationGroup.checked = true;
+        } else {
+            destinationProfile.checked = true;
+        }
+
+        applyDestinationVisibility();
+
+        destinationProfile.addEventListener('change', function() {
+            applyDestinationVisibility();
+        });
+        destinationGroup.addEventListener('change', function() {
+            applyDestinationVisibility();
+        });
+
+        if (postForm) {
+            postForm.addEventListener('submit', function(e) {
+                const groupMode = destinationGroup.checked;
+                const profileMode = destinationProfile.checked;
+
+                if (!groupMode && !profileMode) {
+                    e.preventDefault();
+                    alert(window.I18N.select_destination);
+                    return;
+                }
+
+                if (groupMode && groupSelect && !groupSelect.value) {
+                    e.preventDefault();
+                    alert(window.I18N.select_group);
+                }
+            });
+        }
+    }
+    
+    // Markdown toolbar actions
+    const toolbarActions = {
+        bold: { prefix: '**', suffix: '**', placeholder: window.I18N.toolbar_placeholder_bold },
+        italic: { prefix: '*', suffix: '*', placeholder: window.I18N.toolbar_placeholder_italic },
+        strikethrough: { prefix: '~~', suffix: '~~', placeholder: window.I18N.toolbar_placeholder_strikethrough },
+        heading: { prefix: '## ', suffix: '', placeholder: window.I18N.toolbar_placeholder_heading, lineStart: true },
+        quote: { prefix: '> ', suffix: '', placeholder: window.I18N.toolbar_placeholder_quote, lineStart: true },
+        code: { prefix: '`', suffix: '`', placeholder: window.I18N.toolbar_placeholder_code, isCode: true },
+        ul: { prefix: '- ', suffix: '', placeholder: window.I18N.toolbar_placeholder_list_item, lineStart: true },
+        ol: { prefix: '1. ', suffix: '', placeholder: window.I18N.toolbar_placeholder_list_item, lineStart: true },
+        link: { prefix: '[', suffix: '](url)', placeholder: window.I18N.toolbar_placeholder_link_text }
+    };
+    
+    document.querySelectorAll('.toolbar-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const action = this.dataset.action;
+            const config = toolbarActions[action];
+            if (!config) return;
+            
+            const start = content.selectionStart;
+            const end = content.selectionEnd;
+            const text = content.value;
+            const selectedText = text.substring(start, end) || config.placeholder;
+            
+            let newText;
+            let cursorOffset = config.prefix.length;
+
+            function applyListPrefix(kind) {
+                const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+                const block = text.substring(lineStart, end);
+                const lines = (block || selectedText).split('\n');
+                const prefixed = lines.map((line, idx) => {
+                    if (!line) return line;
+                    if (kind === 'ol') return `${idx + 1}. ${line}`;
+                    return `- ${line}`;
+                }).join('\n');
+                newText = text.substring(0, lineStart) + prefixed + text.substring(end);
+                cursorOffset = 0;
+            }
+            
+            // Special handling for code - use code block if multiline or no selection
+            if (config.isCode) {
+                const hasNewlines = selectedText.includes('\n');
+                const noSelection = start === end;
+                
+                if (hasNewlines || noSelection) {
+                    // Use fenced code block
+                    const codePrefix = '\n```\n';
+                    const codeSuffix = '\n```\n';
+                    const codeContent = noSelection ? window.I18N.toolbar_code_here : selectedText;
+                    newText = text.substring(0, start) + codePrefix + codeContent + codeSuffix + text.substring(end);
+                    cursorOffset = codePrefix.length;
+                } else {
+                    // Use inline code for single-line selection
+                    newText = text.substring(0, start) + '`' + selectedText + '`' + text.substring(end);
+                    cursorOffset = 1;
+                }
+            } else if (config.lineStart) {
+                const hasSelection = start !== end;
+                const hasNewlines = selectedText.includes('\n');
+                if ((action === 'ul' || action === 'ol') && (hasSelection || hasNewlines)) {
+                    applyListPrefix(action);
+                } else {
+                    const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+                    newText = text.substring(0, lineStart) + config.prefix + text.substring(lineStart, start) + selectedText + config.suffix + text.substring(end);
+                }
+            } else {
+                newText = text.substring(0, start) + config.prefix + selectedText + config.suffix + text.substring(end);
+            }
+            
+            content.value = newText;
+            content.focus();
+            
+            const newCursorPos = start + cursorOffset + selectedText.length;
+            content.setSelectionRange(newCursorPos, newCursorPos);
+        });
+    });
+    
+    // Keyboard shortcuts
+    content.addEventListener('keydown', function(e) {
+        if (e.ctrlKey || e.metaKey) {
+            if (e.key === 'b') {
+                e.preventDefault();
+                document.querySelector('[data-action="bold"]').click();
+            } else if (e.key === 'i') {
+                e.preventDefault();
+                document.querySelector('[data-action="italic"]').click();
+            }
+        }
+    });
+    
+    // Preview toggle
+    let isPreview = false;
+    togglePreview.addEventListener('click', function() {
+        isPreview = !isPreview;
+        if (isPreview) {
+            fetch('/api/render-markdown', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content.value })
+            })
+            .then(res => res.json())
+            .then(data => {
+                preview.innerHTML = data.html || '<p class="text-light-text-muted dark:text-dark-text-muted">' + window.I18N.no_preview + '</p>';
+            });
+            editorContainer.classList.add('hidden');
+            previewContainer.classList.remove('hidden');
+            togglePreview.textContent = window.I18N.edit;
+        } else {
+            editorContainer.classList.remove('hidden');
+            previewContainer.classList.add('hidden');
+            togglePreview.textContent = window.I18N.preview;
+        }
+    });
+    
+    // Drag & Drop
+    dropZone.addEventListener('click', () => imageInput.click());
+    
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-brand-teal', 'bg-brand-teal/5');
+    });
+    
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('border-brand-teal', 'bg-brand-teal/5');
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-brand-teal', 'bg-brand-teal/5');
+        
+        const files = e.dataTransfer.files;
+        
+        // Add new files to array
+        for (let i = 0; i < files.length; i++) {
+            if (files[i].type.startsWith('image/')) {
+                filesArray.push(files[i]);
+            }
+        }
+        
+        updateImagePreviews();
+    });
+    
+    // Store files in array for reordering
+    let filesArray = [];
+    
+    imageInput.addEventListener('change', function() {
+        // Add selected files to array
+        for (let i = 0; i < this.files.length; i++) {
+            filesArray.push(this.files[i]);
+        }
+        updateImagePreviews();
+    });
+    
+    function updateImagePreviews() {
+        imagePreviews.innerHTML = '';
+        
+        filesArray.forEach((file, i) => {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const div = document.createElement('div');
+                div.className = 'relative group cursor-move sortable-preview';
+                div.dataset.index = i;
+                div.draggable = true;
+                div.innerHTML = `
+                    <img src="${e.target.result}" class="w-full h-20 object-cover rounded-md pointer-events-none">
+                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-md pointer-events-none"></div>
+                    <div class="absolute top-1 left-1 p-1 bg-black/50 text-white rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
+                    </div>
+                    <button type="button" data-index="${i}" class="remove-image absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs z-10">×</button>
+                `;
+                imagePreviews.appendChild(div);
+                initDragDrop(div);
+            };
+            
+            reader.readAsDataURL(file);
+        });
+        
+        // Update hidden file input with reordered files
+        syncFilesToInput();
+    }
+    
+    function syncFilesToInput() {
+        const dt = new DataTransfer();
+        filesArray.forEach(f => dt.items.add(f));
+        imageInput.files = dt.files;
+    }
+    
+    function initDragDrop(item) {
+        item.addEventListener('dragstart', function(e) {
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', this.dataset.index);
+        });
+        
+        item.addEventListener('dragend', function() {
+            this.style.opacity = '1';
+        });
+        
+        item.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+        
+        item.addEventListener('dragenter', function(e) {
+            e.preventDefault();
+            this.style.transform = 'scale(1.05)';
+            this.style.transition = 'transform 0.2s';
+        });
+        
+        item.addEventListener('dragleave', function() {
+            this.style.transform = '';
+        });
+        
+        item.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.transform = '';
+            const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+            const toIndex = parseInt(this.dataset.index);
+            
+            if (fromIndex !== toIndex) {
+                const [movedFile] = filesArray.splice(fromIndex, 1);
+                filesArray.splice(toIndex, 0, movedFile);
+                updateImagePreviews();
+            }
+        });
+    }
+    
+    imagePreviews.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-image')) {
+            const index = parseInt(e.target.dataset.index);
+            filesArray.splice(index, 1);
+            updateImagePreviews();
+        }
+    });
+    
+    // Tag selection system
+    const tagSearch = document.getElementById('tag-search');
+    const tagDropdown = document.getElementById('tag-dropdown');
+    const selectedTagsContainer = document.getElementById('selected-tags');
+    const hiddenInputsContainer = document.getElementById('tags-hidden-inputs');
+    
+    let availableTags = [];
+    try {
+        availableTags = JSON.parse(document.getElementById('available-tags').textContent);
+    } catch(e) { availableTags = []; }
+    
+    let selectedTags = [];
+    
+    function renderSelectedTags() {
+        selectedTagsContainer.innerHTML = '';
+        hiddenInputsContainer.innerHTML = '';
+        selectedTags.forEach(tag => {
+            // Visual tag chip
+            const chip = document.createElement('span');
+            chip.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-white cursor-pointer hover:scale-105 transition-all shadow-md';
+            chip.style.backgroundColor = tag.color;
+            chip.style.boxShadow = '0 2px 8px ' + tag.color + '40';
+            chip.innerHTML = `
+                <span>${tag.name}</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            `;
+            chip.onclick = () => removeTag(tag.id);
+            selectedTagsContainer.appendChild(chip);
+            
+            // Hidden input for form
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'tags';
+            input.value = tag.id;
+            hiddenInputsContainer.appendChild(input);
+        });
+    }
+    
+    function addTag(tag) {
+        if (!selectedTags.find(t => t.id === tag.id)) {
+            selectedTags.push(tag);
+            renderSelectedTags();
+        }
+        tagSearch.value = '';
+        tagDropdown.classList.add('hidden');
+    }
+    
+    function removeTag(tagId) {
+        selectedTags = selectedTags.filter(t => t.id !== tagId);
+        renderSelectedTags();
+    }
+    
+    function renderDropdown(filter = '') {
+        const filtered = availableTags.filter(t => 
+            t.name.toLowerCase().includes(filter.toLowerCase()) &&
+            !selectedTags.find(s => s.id === t.id)
+        );
+        
+        tagDropdown.innerHTML = '';
+        
+        filtered.forEach(tag => {
+            const item = document.createElement('div');
+            item.className = 'flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-light-bg dark:hover:bg-dark-bg';
+            item.innerHTML = `
+                <span class="w-3 h-3 rounded-full" style="background-color: ${tag.color}"></span>
+                <span class="text-sm">${tag.name}</span>
+            `;
+            item.onclick = () => addTag(tag);
+            tagDropdown.appendChild(item);
+        });
+        
+        // Option to create new tag
+        if (filter.trim() && !availableTags.find(t => t.name.toLowerCase() === filter.toLowerCase())) {
+            const createItem = document.createElement('div');
+            createItem.className = 'flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-light-bg dark:hover:bg-dark-bg border-t border-light-border dark:border-dark-border text-brand-teal';
+            createItem.innerHTML = `
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span class="text-sm">${window.I18N.create_tag} "${filter}"</span>
+            `;
+            createItem.onclick = () => createNewTag(filter);
+            tagDropdown.appendChild(createItem);
+        }
+        
+        if (tagDropdown.children.length > 0) {
+            tagDropdown.classList.remove('hidden');
+        } else {
+            tagDropdown.classList.add('hidden');
+        }
+    }
+    
+    function createNewTag(name) {
+        fetch('/me/tags/create?format=json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `name=${encodeURIComponent(name)}&color=${encodeURIComponent('#4da9a4')}`
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                availableTags.push(data.tag);
+                addTag(data.tag);
+            } else {
+                window.alertModal.show(data.error || window.I18N.error_creating, {title: window.I18N.error, type: 'error'});
+            }
+        })
+        .catch(() => window.alertModal.show(window.I18N.error_creating_tag, {title: window.I18N.error, type: 'error'}));
+    }
+    
+    tagSearch.addEventListener('input', () => renderDropdown(tagSearch.value));
+    tagSearch.addEventListener('focus', () => renderDropdown(tagSearch.value));
+    
+    document.addEventListener('click', (e) => {
+        if (!tagSearch.contains(e.target) && !tagDropdown.contains(e.target)) {
+            tagDropdown.classList.add('hidden');
+        }
+    });
+    
+    // ============== @Mention Autocomplete ==============
+    const mentionDropdown = document.getElementById('mention-dropdown');
+    const mentionSearch = document.getElementById('mention-search');
+    const mentionResults = document.getElementById('mention-results');
+    let mentionStartPos = null;
+    let mentionSearchTimeout = null;
+    
+    content.addEventListener('keyup', function(e) {
+        const cursorPos = this.selectionStart;
+        const textBefore = this.value.substring(0, cursorPos);
+        
+        // Check if we're in a mention context (@ followed by text)
+        const mentionMatch = textBefore.match(/@(\w*)$/);
+        
+        if (mentionMatch) {
+            mentionStartPos = cursorPos - mentionMatch[0].length;
+            const query = mentionMatch[1];
+            
+            // Position dropdown near cursor
+            const rect = this.getBoundingClientRect();
+            const lineHeight = parseInt(getComputedStyle(this).lineHeight) || 20;
+            const lines = textBefore.split('\n').length;
+            
+            mentionDropdown.style.top = Math.min(lines * lineHeight + 40, rect.height - 200) + 'px';
+            mentionDropdown.style.left = '20px';
+            mentionDropdown.classList.remove('hidden');
+            mentionSearch.value = query;
+            mentionSearch.focus();
+            
+            searchUsers(query);
+        } else if (e.key === 'Escape') {
+            closeMentionDropdown();
+        }
+    });
+    
+    mentionSearch.addEventListener('input', function() {
+        clearTimeout(mentionSearchTimeout);
+        mentionSearchTimeout = setTimeout(() => {
+            searchUsers(this.value);
+        }, 150);
+    });
+    
+    mentionSearch.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeMentionDropdown();
+            content.focus();
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const first = mentionResults.querySelector('.mention-item');
+            if (first) first.focus();
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            const first = mentionResults.querySelector('.mention-item');
+            if (first) first.click();
+        }
+    });
+    
+    function searchUsers(query) {
+        fetch('/api/users/search?q=' + encodeURIComponent(query))
+            .then(res => res.json())
+            .then(data => {
+                mentionResults.innerHTML = '';
+                
+                if (data.users.length === 0) {
+                    mentionResults.innerHTML = '<div class="p-3 text-sm text-light-text-muted dark:text-dark-text-muted text-center">' + window.I18N.no_users_found + '</div>';
+                    return;
+                }
+                
+                data.users.forEach((user, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'mention-item flex items-center gap-3 p-3 hover:bg-light-bg dark:hover:bg-dark-bg cursor-pointer transition-colors';
+                    div.tabIndex = 0;
+                    div.innerHTML = `
+                        ${user.avatar_url 
+                            ? `<img src="${user.avatar_url}" class="w-8 h-8 rounded-full object-cover" alt="">`
+                            : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background-color: ${user.theme_color}">${(user.display_name || user.username)[0].toUpperCase()}</div>`
+                        }
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium text-sm truncate">${user.display_name || user.username}</div>
+                            <div class="text-xs text-light-text-muted dark:text-dark-text-muted">@${user.username}</div>
+                        </div>
+                    `;
+                    
+                    div.addEventListener('click', () => selectMention(user.username));
+                    div.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') selectMention(user.username);
+                        else if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            const next = div.nextElementSibling;
+                            if (next) next.focus();
+                        } else if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            const prev = div.previousElementSibling;
+                            if (prev) prev.focus();
+                            else mentionSearch.focus();
+                        } else if (e.key === 'Escape') {
+                            closeMentionDropdown();
+                            content.focus();
+                        }
+                    });
+                    
+                    mentionResults.appendChild(div);
+                });
+            });
+    }
+    
+    function selectMention(username) {
+        const before = content.value.substring(0, mentionStartPos);
+        const after = content.value.substring(content.selectionStart);
+        content.value = before + '@' + username + ' ' + after;
+        content.focus();
+        content.selectionStart = content.selectionEnd = mentionStartPos + username.length + 2;
+        closeMentionDropdown();
+    }
+    
+    function closeMentionDropdown() {
+        mentionDropdown.classList.add('hidden');
+        mentionStartPos = null;
+    }
+    
+    document.addEventListener('click', (e) => {
+        if (!mentionDropdown.contains(e.target) && e.target !== content) {
+            closeMentionDropdown();
+        }
+    });
+    
+    // ============== Poll UI ==============
+    const togglePoll = document.getElementById('toggle-poll');
+    const pollSection = document.getElementById('poll-section');
+    const addPollOption = document.getElementById('add-poll-option');
+    const pollOptions = document.getElementById('poll-options');
+    const removePoll = document.getElementById('remove-poll');
+    
+    togglePoll.addEventListener('click', function() {
+        pollSection.classList.toggle('hidden');
+        this.textContent = pollSection.classList.contains('hidden') ? window.I18N.add_poll : window.I18N.hide_poll;
+    });
+    
+    removePoll.addEventListener('click', function() {
+        pollSection.classList.add('hidden');
+        togglePoll.textContent = window.I18N.add_poll;
+        document.getElementById('poll-question').value = '';
+        pollOptions.innerHTML = `
+            <div class="flex items-center gap-2">
+                <input type="text" name="poll_options[]" placeholder="${window.I18N.option_1}"
+                    class="flex-1 px-3 py-2 text-sm rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg focus:outline-none focus:ring-2 focus:ring-brand-teal">
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="text" name="poll_options[]" placeholder="${window.I18N.option_2}"
+                    class="flex-1 px-3 py-2 text-sm rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg focus:outline-none focus:ring-2 focus:ring-brand-teal">
+            </div>
+        `;
+    });
+    
+    addPollOption.addEventListener('click', function() {
+        const optionCount = pollOptions.querySelectorAll('input').length + 1;
+        const optionPlaceholder = (window.I18N.option_n || 'Option {n}').replace('{n}', optionCount);
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-2';
+        div.innerHTML = `
+            <input type="text" name="poll_options[]" placeholder="${optionPlaceholder}"
+                class="flex-1 px-3 py-2 text-sm rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg focus:outline-none focus:ring-2 focus:ring-brand-teal">
+            <button type="button" class="remove-option p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        `;
+        div.querySelector('.remove-option').addEventListener('click', () => div.remove());
+        pollOptions.appendChild(div);
+    });
+    
+    // ============== Scheduling UI ==============
+    const toggleSchedule = document.getElementById('toggle-schedule');
+    const scheduleSection = document.getElementById('schedule-section');
+    const scheduledAtInput = document.getElementById('scheduled_at');
+    const removeSchedule = document.getElementById('remove-schedule');
+    
+    if (toggleSchedule && scheduleSection) {
+        toggleSchedule.addEventListener('click', function() {
+            scheduleSection.classList.toggle('hidden');
+            this.textContent = scheduleSection.classList.contains('hidden') ? window.I18N.set_time : window.I18N.hide_schedule;
+        });
+        
+        if (removeSchedule) {
+            removeSchedule.addEventListener('click', function() {
+                scheduleSection.classList.add('hidden');
+                toggleSchedule.textContent = window.I18N.set_time;
+                if (scheduledAtInput) scheduledAtInput.value = '';
+            });
+        }
+    }
+});
+</script>
+{% endblock %}
+
