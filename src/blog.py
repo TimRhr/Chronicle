@@ -743,7 +743,7 @@ def new_post():
         title = request.form.get('title', '').strip() or None
         content = request.form.get('content', '').strip() or None
         page_id = request.form.get('page_id') or None
-        group_id = request.form.get('group_id') or None
+        group_id = int(request.form.get('group_id')) or None
         post_type = request.form.get('post_type', 'text')
         show_in_feed = 'show_in_feed' in request.form
         destination = (request.form.get('destination') or '').strip()
