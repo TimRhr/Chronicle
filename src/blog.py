@@ -747,6 +747,18 @@ def new_post():
         post_type = request.form.get('post_type', 'text')
         show_in_feed = 'show_in_feed' in request.form
         destination = (request.form.get('destination') or '').strip()
+
+        if page_id:
+            try:
+                page_id = int(page_id)
+            except (TypeError, ValueError):
+                page_id = None
+
+        if group_id:
+            try:
+                group_id = int(group_id)
+            except (TypeError, ValueError):
+                group_id = None
         
         # Parse scheduled publish time
         scheduled_at = None
