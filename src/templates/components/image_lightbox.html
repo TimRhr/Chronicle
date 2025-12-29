@@ -2,23 +2,34 @@
 <div id="image-lightbox" class="hidden fixed inset-0 z-50 flex items-center justify-center">
     <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" id="lightbox-backdrop"></div>
     <div class="relative z-10 max-w-[90vw] max-h-[90vh]">
-        <img id="lightbox-image" src="" alt="" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl">
-        <button id="lightbox-close" class="absolute -top-4 -right-4 w-8 h-8 bg-light-surface dark:bg-dark-surface rounded-full shadow-lg flex items-center justify-center text-light-text-muted dark:text-dark-text-muted hover:text-light-text-primary dark:hover:text-dark-text-primary transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-        </button>
+        <div class="relative max-w-[90vw] max-h-[90vh]">
+            <img id="lightbox-image" src="" alt="" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl select-none">
+            <button id="lightbox-close" class="absolute -top-4 -right-4 w-8 h-8 bg-light-surface dark:bg-dark-surface rounded-full shadow-lg flex items-center justify-center text-light-text-muted dark:text-dark-text-muted hover:text-light-text-primary dark:hover:text-dark-text-primary transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            <div id="lightbox-counter" class="absolute bottom-3 right-4 px-2 py-1 rounded-full bg-black/60 text-white text-xs font-medium"></div>
+        </div>
     </div>
 </div>
 
 <script>
     window.imageLightbox = {
-        show: function(src) {
+        images: [],
+        currentIndex: 0,
+        show: function(initialSources, startIndex) {
             const lightbox = document.getElementById('image-lightbox');
             const img = document.getElementById('lightbox-image');
             const appContent = document.getElementById('app-content');
+            const counter = document.getElementById('lightbox-counter');
             
-            img.src = src;
+            this.images = Array.isArray(initialSources) && initialSources.length ? initialSources : [];
+            this.currentIndex = Math.min(Math.max(startIndex || 0, 0), this.images.length - 1);
+            const activeSrc = this.images[this.currentIndex] || '';
+            img.src = activeSrc;
+            counter.textContent = this.images.length > 1 ? `${this.currentIndex + 1}/${this.images.length}` : '';
+
             lightbox.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
             
@@ -39,6 +50,25 @@
                 appContent.style.filter = '';
                 appContent.style.pointerEvents = '';
             }
+        },
+
+        next: function() {
+            if (!this.images.length) return;
+            this.currentIndex = (this.currentIndex + 1) % this.images.length;
+            this.updateImage();
+        },
+
+        prev: function() {
+            if (!this.images.length) return;
+            this.currentIndex = (this.currentIndex - 1 + this.images.length) % this.images.length;
+            this.updateImage();
+        },
+
+        updateImage: function() {
+            const img = document.getElementById('lightbox-image');
+            const counter = document.getElementById('lightbox-counter');
+            img.src = this.images[this.currentIndex];
+            counter.textContent = this.images.length > 1 ? `${this.currentIndex + 1}/${this.images.length}` : '';
         }
     };
 
@@ -55,13 +85,48 @@
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && !document.getElementById('image-lightbox').classList.contains('hidden')) {
             window.imageLightbox.hide();
+        } else if (e.key === 'ArrowRight' && !document.getElementById('image-lightbox').classList.contains('hidden')) {
+            window.imageLightbox.next();
+        } else if (e.key === 'ArrowLeft' && !document.getElementById('image-lightbox').classList.contains('hidden')) {
+            window.imageLightbox.prev();
         }
     });
 
+    // Touch/Swipe support
+    (function() {
+        const img = document.getElementById('lightbox-image');
+        let startX = null;
+        img.addEventListener('touchstart', function(e) {
+            startX = e.touches[0].clientX;
+        }, { passive: true });
+
+        img.addEventListener('touchend', function(e) {
+            if (startX === null) return;
+            const diff = e.changedTouches[0].clientX - startX;
+            if (Math.abs(diff) > 40) {
+                if (diff < 0) {
+                    window.imageLightbox.next();
+                } else {
+                    window.imageLightbox.prev();
+                }
+            }
+            startX = null;
+        }, { passive: true });
+    })();
+
     // Use event delegation for lightbox images (works for dynamically loaded content)
     document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('lightbox-image')) {
-            window.imageLightbox.show(e.target.src);
+        const target = e.target.closest('.lightbox-image');
+        if (target) {
+            const gallery = target.closest('.image-gallery');
+            let sources = [];
+            if (gallery) {
+                sources = Array.from(gallery.querySelectorAll('.lightbox-image')).map(img => img.dataset.lightboxSrc || img.src);
+            } else {
+                sources = [target.dataset.lightboxSrc || target.src];
+            }
+            const initialIndex = sources.indexOf(target.dataset.lightboxSrc || target.src);
+            window.imageLightbox.show(sources, initialIndex === -1 ? 0 : initialIndex);
         }
     });
 </script>

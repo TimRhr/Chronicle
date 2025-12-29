@@ -7,11 +7,32 @@ from flask_babel import gettext as _
 from sqlalchemy import func, extract
 from slugify import slugify
 from extensions import db, limiter
-from models import Post, Tag, Reaction, Bookmark, Comment, CommentReaction, Notification, Follow, User, Page, Poll, PollOption, PollVote, PostVersion, Group, GroupMembership, GroupFile, GroupAnnouncement
+from models import (
+    Post,
+    Tag,
+    Reaction,
+    Bookmark,
+    Comment,
+    CommentReaction,
+    Notification,
+    Follow,
+    User,
+    Page,
+    Poll,
+    PollOption,
+    PollVote,
+    PostVersion,
+    Group,
+    GroupMembership,
+    GroupFile,
+    GroupAnnouncement,
+    PushSubscription,
+)
 import os
 import shutil
 from werkzeug.utils import secure_filename
 from content_utils import extract_mentions
+from push import send_push_notification
 
 try:
     from zoneinfo import ZoneInfo
@@ -789,6 +810,49 @@ def mark_notification_read(notification_id):
     return jsonify({'success': True})
 
 
+@social_bp.route('/api/push/subscribe', methods=['POST'])
+@login_required
+def subscribe_push():
+    if not current_app.config.get("VAPID_PUBLIC_KEY") or not current_app.config.get("VAPID_PRIVATE_KEY"):
+        return jsonify({'error': 'Push not configured'}), 400
+    payload = request.get_json(silent=True) or {}
+    subscription = payload.get('subscription') or {}
+    endpoint = subscription.get('endpoint')
+    keys = subscription.get('keys') or {}
+    p256dh = keys.get('p256dh')
+    auth_key = keys.get('auth')
+    if not endpoint or not p256dh or not auth_key:
+        return jsonify({'error': 'Invalid subscription'}), 400
+    existing = PushSubscription.query.filter_by(endpoint=endpoint).first()
+    if existing:
+        existing.user_id = current_user.id
+        existing.p256dh = p256dh
+        existing.auth = auth_key
+    else:
+        db.session.add(PushSubscription(
+            user_id=current_user.id,
+            endpoint=endpoint,
+            p256dh=p256dh,
+            auth=auth_key
+        ))
+    db.session.commit()
+    return jsonify({'success': True})
+
+
+@social_bp.route('/api/push/unsubscribe', methods=['POST'])
+@login_required
+def unsubscribe_push():
+    payload = request.get_json(silent=True) or {}
+    endpoint = payload.get('endpoint')
+    if not endpoint:
+        return jsonify({'error': 'Endpoint required'}), 400
+    subscription = PushSubscription.query.filter_by(user_id=current_user.id, endpoint=endpoint).first()
+    if subscription:
+        db.session.delete(subscription)
+        db.session.commit()
+    return jsonify({'success': True})
+
+
 def create_notification(user_id, type, title, message=None, link=None, actor_id=None, post_id=None, comment_id=None):
     """Helper function to create a notification."""
     # Don't notify yourself
@@ -807,6 +871,20 @@ def create_notification(user_id, type, title, message=None, link=None, actor_id=
     )
     db.session.add(notification)
     db.session.commit()
+    try:
+        unread_count = Notification.query.filter_by(user_id=user_id, is_read=False).count()
+        send_push_notification(
+            user_id,
+            {
+                "title": title,
+                "message": message,
+                "type": type,
+                "link": link,
+                "unread_count": unread_count,
+            },
+        )
+    except Exception:
+        current_app.logger.exception("Error sending push notification")
     return notification
 
 

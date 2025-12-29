@@ -1,0 +1,7 @@
+This directory contains Alembic/Flask-Migrate configuration files.
+
+Use the Flask CLI to manage database migrations:
+
+    flask --app src.app:create_app db init
+    flask --app src.app:create_app db migrate -m "message"
+    flask --app src.app:create_app db upgrade

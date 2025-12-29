@@ -415,13 +415,7 @@ def restore_injection_blocks(html_content, injections):
         # UI Container
         return f'''
         <div class="my-6 rounded-lg border border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface overflow-hidden shadow-sm">
-            <div class="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-light-border dark:border-dark-border">
-                <div class="flex items-center gap-2">
-                    <svg class="w-4 h-4 text-brand-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
-                    </svg>
-                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">HTML/JS Injection</span>
-                </div>
+            <div class="flex items-center justify-end px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-light-border dark:border-dark-border">
                 <div class="flex gap-2">
                      <div class="w-2 h-2 rounded-full bg-red-400"></div>
                      <div class="w-2 h-2 rounded-full bg-yellow-400"></div>

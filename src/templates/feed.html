@@ -55,6 +55,17 @@
             </button>
         </form>
         
+        {% if current_user.is_authenticated %}
+        <div>
+            <a id="mobile-new-post-btn" href="{{ url_for('blog.new_post', next=request.full_path) }}" class="hidden flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-brand-teal rounded-xl shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:ring-offset-2 focus:ring-offset-light-surface dark:focus:ring-offset-dark-surface transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                {{ _('New post') }}
+            </a>
+        </div>
+        {% endif %}
+        
         <!-- Advanced Filters (collapsible) -->
         <div id="filter-panel" class="hidden glass-card p-4 space-y-3">
             <div class="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-5 gap-3">
@@ -765,6 +776,23 @@
     let isLoading = false;
     let hasMore = {{ 'true' if has_more else 'false' }};
     const postsContainer = document.getElementById('posts-container');
+    const mobileNewPostBtn = document.getElementById('mobile-new-post-btn');
+    const sidebarContainer = document.getElementById('feed-sidebar-container');
+
+    if (mobileNewPostBtn) {
+        const updateMobileButtonVisibility = () => {
+            const sidebarVisible = sidebarContainer && window.getComputedStyle(sidebarContainer).display !== 'none';
+            if (sidebarVisible) {
+                mobileNewPostBtn.classList.add('hidden');
+            } else {
+                mobileNewPostBtn.classList.remove('hidden');
+            }
+        };
+
+        updateMobileButtonVisibility();
+        window.addEventListener('resize', updateMobileButtonVisibility);
+        window.addEventListener('orientationchange', updateMobileButtonVisibility);
+    }
     
     function loadMorePosts() {
         if (isLoading || !hasMore) return;

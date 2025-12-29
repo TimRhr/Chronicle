@@ -6,10 +6,129 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}Chronicle{% endblock %}</title>
     <link rel="icon" href="{{ url_for('static', filename='assets/favicon.ico') }}" type="image/x-icon">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/logo.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Merriweather:wght@400;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        const PUSH_PUBLIC_KEY = "{{ push_public_key or '' }}";
+        const IS_AUTHENTICATED = {{ 'true' if is_authenticated else 'false' }};
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js').then((registration) => {
+                    window.__swRegistration = registration;
+                    navigator.serviceWorker.addEventListener('message', (event) => {
+                        if (event.data && event.data.type === 'badge-update') {
+                            window.updateAppBadges(event.data.unread_count || 0);
+                        }
+                    });
+                    if (Notification.permission === 'granted' && IS_AUTHENTICATED && PUSH_PUBLIC_KEY) {
+                        window.ensurePushSubscription?.();
+                    }
+                }).catch((err) => {
+                    console.error('Service worker registration failed:', err);
+                });
+            });
+        }
+        window.BASE_PAGE_TITLE = document.title;
+        window.updateAppBadges = function(count) {
+            const safeCount = typeof count === 'number' ? count : 0;
+            const clamped = safeCount > 99 ? '99+' : safeCount;
+            if ('setAppBadge' in navigator) {
+                if (safeCount > 0) {
+                    navigator.setAppBadge(safeCount).catch(() => {});
+                } else {
+                    navigator.clearAppBadge().catch(() => {});
+                }
+            }
+            document.title = safeCount > 0 ? `(${clamped}) ${window.BASE_PAGE_TITLE}` : window.BASE_PAGE_TITLE;
+        };
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        async function sendSubscriptionToServer(subscription) {
+            await fetch('/api/push/subscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': window.csrfToken,
+                },
+                body: JSON.stringify({ subscription }),
+                credentials: 'same-origin',
+            });
+        }
+
+        async function removeSubscriptionFromServer(endpoint) {
+            if (!endpoint) return;
+            await fetch('/api/push/unsubscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': window.csrfToken,
+                },
+                body: JSON.stringify({ endpoint }),
+                credentials: 'same-origin',
+            });
+        }
+
+        window.ensurePushSubscription = async function() {
+            if (!PUSH_PUBLIC_KEY || !IS_AUTHENTICATED || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+                return;
+            }
+            if (Notification.permission === 'denied') {
+                const registration = await navigator.serviceWorker.ready;
+                const subscription = await registration.pushManager.getSubscription();
+                if (subscription) {
+                    const endpoint = subscription.endpoint;
+                    await subscription.unsubscribe();
+                    await removeSubscriptionFromServer(endpoint);
+                }
+                return;
+            }
+            if (Notification.permission !== 'granted') {
+                return;
+            }
+            try {
+                const registration = await navigator.serviceWorker.ready;
+                let subscription = await registration.pushManager.getSubscription();
+                if (!subscription) {
+                    subscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(PUSH_PUBLIC_KEY),
+                    });
+                }
+                await sendSubscriptionToServer(subscription.toJSON());
+            } catch (err) {
+                console.error('Error subscribing to push notifications', err);
+            }
+        };
+
+        window.requestPushPermission = function() {
+            if (!IS_AUTHENTICATED || !PUSH_PUBLIC_KEY || !('Notification' in window)) {
+                return;
+            }
+            if (Notification.permission === 'default') {
+                Notification.requestPermission().then((permission) => {
+                    if (permission === 'granted') {
+                        window.ensurePushSubscription();
+                    }
+                });
+            } else if (Notification.permission === 'granted') {
+                window.ensurePushSubscription();
+            }
+        };
+    </script>
     <style>
         @font-face {
             font-family: 'Ephesis';
@@ -190,6 +309,7 @@
         <nav class="container mx-auto px-4 py-4">
             <div class="flex items-center justify-between">
                 <a href="{{ url_for('index') }}" class="flex items-center gap-3">
+                    <script src="{{ url_for('static', filename='js/lang.js') }}"></script>
                     <img src="{{ url_for('static', filename='assets/logo.png') }}" alt="Chronicle Logo" class="h-10 w-10 rounded-md">
                     <span class="font-logo text-3xl text-brand-teal dark:text-brand-mint">Chronicle</span>
                 </a>
@@ -578,6 +698,7 @@
                             } else {
                                 notificationBadge.classList.add('hidden');
                             }
+                            window.updateAppBadges(data.unread_count);
                             
                             // Render notifications
                             if (data.notifications.length === 0) {
@@ -644,6 +765,7 @@
                     fetch('/api/notifications/mark-read', { method: 'POST' })
                         .then(() => {
                             loadNotifications();
+                            window.updateAppBadges(0);
                         });
                 });
             }
