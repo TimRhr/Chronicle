@@ -1,6 +1,8 @@
 """
 Content utilities for link previews, embeds, and markdown processing.
 """
+import html
+import uuid
 import ipaddress
 import re
 import socket
@@ -318,6 +320,10 @@ def render_markdown(text, with_toc=False):
     if not text:
         return '' if not with_toc else ('', [])
 
+    # 1. Extract injection blocks before markdown processing to protect them
+    # and replace with placeholders
+    text, injections = extract_injection_blocks(text)
+
     # Support GitHub-style strikethrough: ~~text~~
     # python-markdown doesn't support this by default; convert to <del> which is allowed.
     text = re.sub(r'(?<!~)~~(?!~)(.+?)(?<!~)~~(?!~)', r'<del>\1</del>', text)
@@ -325,7 +331,7 @@ def render_markdown(text, with_toc=False):
     toc = generate_toc(text) if with_toc else []
     
     # Convert markdown to HTML with syntax highlighting
-    html = markdown.markdown(
+    html_content = markdown.markdown(
         text,
         extensions=[
             'markdown.extensions.fenced_code',
@@ -349,7 +355,7 @@ def render_markdown(text, with_toc=False):
     
     # Sanitize HTML
     clean_html = bleach.clean(
-        html,
+        html_content,
         tags=ALLOWED_TAGS,
         attributes=ALLOWED_ATTRIBUTES,
         strip=True
@@ -364,10 +370,94 @@ def render_markdown(text, with_toc=False):
     
     # Parse @mentions and convert to profile links
     clean_html = parse_mentions(clean_html)
+
+    # 2. Restore injection blocks as secure iframes
+    clean_html = restore_injection_blocks(clean_html, injections)
     
     if with_toc:
         return clean_html, toc
     return clean_html
+
+
+def extract_injection_blocks(text):
+    """
+    Finds ```injection ... ``` blocks, replaces them with placeholders,
+    and returns the modified text and a dict of ID -> Content.
+    """
+    injections = {}
+    
+    def replace_block(match):
+        content = match.group(1)
+        block_id = str(uuid.uuid4())
+        injections[block_id] = content
+        return f'[CHRONICLE_INJECTION_BLOCK:{block_id}]'
+
+    # Regex for ```injection\n...\n```
+    # We use non-greedy matching for content
+    pattern = re.compile(r'(?m)^```injection\s*\n(.*?)\n^```\s*$', re.DOTALL)
+    processed_text = pattern.sub(replace_block, text)
+    
+    return processed_text, injections
+
+
+def restore_injection_blocks(html_content, injections):
+    """
+    Replaces [CHRONICLE_INJECTION_BLOCK:ID] placeholders with secure iframes.
+    """
+    if not injections:
+        return html_content
+
+    def get_iframe_html(block_id):
+        raw_code = injections.get(block_id, '')
+        # Escape the code to be safe inside srcdoc attribute
+        escaped_code = html.escape(raw_code, quote=True)
+        
+        # UI Container
+        return f'''
+        <div class="my-6 rounded-lg border border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface overflow-hidden shadow-sm">
+            <div class="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-light-border dark:border-dark-border">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-brand-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                    </svg>
+                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">HTML/JS Injection</span>
+                </div>
+                <div class="flex gap-2">
+                     <div class="w-2 h-2 rounded-full bg-red-400"></div>
+                     <div class="w-2 h-2 rounded-full bg-yellow-400"></div>
+                     <div class="w-2 h-2 rounded-full bg-green-400"></div>
+                </div>
+            </div>
+            <div class="relative w-full h-[400px] resize-y overflow-hidden bg-white">
+                <iframe 
+                    srcdoc="{escaped_code}"
+                    sandbox="allow-scripts allow-forms allow-popups allow-modals"
+                    class="w-full h-full border-0"
+                    loading="lazy"
+                    title="User Code Injection"
+                ></iframe>
+            </div>
+        </div>
+        '''
+
+    # Pattern to match the placeholder, potentially wrapped in <p> tags by Markdown
+    # Case 1: Wrapped in <p>
+    p_pattern = re.compile(r'<p>\s*\[CHRONICLE_INJECTION_BLOCK:([a-f0-9-]+)\]\s*</p>')
+    
+    def p_replacer(match):
+        return get_iframe_html(match.group(1))
+        
+    html_content = p_pattern.sub(p_replacer, html_content)
+    
+    # Case 2: Naked placeholder (just in case)
+    naked_pattern = re.compile(r'\[CHRONICLE_INJECTION_BLOCK:([a-f0-9-]+)\]')
+    
+    def naked_replacer(match):
+        return get_iframe_html(match.group(1))
+        
+    html_content = naked_pattern.sub(naked_replacer, html_content)
+    
+    return html_content
 
 
 def parse_mentions(text):
