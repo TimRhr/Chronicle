@@ -882,13 +882,23 @@ def new_post():
             db.session.commit()
         
         # Handle tags
-        tag_ids = request.form.getlist('tags')
-        if tag_ids:
-            for tag_id in tag_ids:
-                tag = Tag.query.filter_by(id=tag_id, user_id=current_user.id).first()
-                if tag:
-                    post.tags.append(tag)
-            db.session.commit()
+        raw_tag_ids = request.form.getlist('tags')
+        if raw_tag_ids:
+            normalized_tag_ids = []
+            for tag_id in raw_tag_ids:
+                if tag_id is None:
+                    continue
+                try:
+                    normalized_tag_ids.append(int(str(tag_id).strip()))
+                except (TypeError, ValueError):
+                    continue
+
+            if normalized_tag_ids:
+                for tag_id in normalized_tag_ids:
+                    tag = Tag.query.filter_by(id=tag_id, user_id=current_user.id).first()
+                    if tag:
+                        post.tags.append(tag)
+                db.session.commit()
         
         # Handle poll creation
         poll_question = request.form.get('poll_question', '').strip()
@@ -1069,10 +1079,18 @@ def edit_post(post_id):
                 new_images_count += 1
         
         # Handle tags
-        tag_ids = request.form.getlist('tags')
-        # Clear existing tags and add new ones
+        raw_tag_ids = request.form.getlist('tags')
         post.tags = []
-        for tag_id in tag_ids:
+        normalized_tag_ids = []
+        for tag_id in raw_tag_ids:
+            if tag_id is None:
+                continue
+            try:
+                normalized_tag_ids.append(int(str(tag_id).strip()))
+            except (TypeError, ValueError):
+                continue
+
+        for tag_id in normalized_tag_ids:
             tag = Tag.query.filter_by(id=tag_id, user_id=current_user.id).first()
             if tag:
                 post.tags.append(tag)
