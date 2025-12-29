@@ -99,14 +99,22 @@ msgid "Send"
 msgstr "Senden"
 
 #: src/app.py:233 src/templates/components/post_interactions.html:73
-msgid "Reply"
-msgstr "Antworten"
+msgid "Save"
+msgstr "Speichern"
+
+#: src/templates/me/edit_post.html:265
+msgid "Saving your changes..."
+msgstr "Änderungen werden gespeichert..."
+
+#: src/templates/me/new_post.html:300
+msgid "Publishing your post..."
+msgstr "Dein Beitrag wird veröffentlicht..."
 
 #: src/app.py:234 src/templates/components/confirm_modal.html:19
 #: src/templates/components/group_announcement_card.html:59
 #: src/templates/groups/files.html:147 src/templates/me/manage_pages.html:87
 msgid "Delete"
-msgstr "Löschen"
+msgstr "Entfernen"
 
 #: src/app.py:235 src/templates/components/group_announcement_card.html:51
 #: src/templates/me/manage_pages.html:82

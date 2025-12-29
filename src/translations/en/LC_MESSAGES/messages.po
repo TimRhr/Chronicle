@@ -99,7 +99,15 @@ msgid "Send"
 msgstr ""
 
 #: src/app.py:233 src/templates/components/post_interactions.html:73
-msgid "Reply"
+msgid "Save"
+msgstr ""
+
+#: src/templates/me/edit_post.html:265
+msgid "Saving your changes..."
+msgstr ""
+
+#: src/templates/me/new_post.html:300
+msgid "Publishing your post..."
 msgstr ""
 
 #: src/app.py:234 src/templates/components/confirm_modal.html:19

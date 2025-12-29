@@ -11,15 +11,19 @@ config = context.config
 
 logger = logging.getLogger('alembic.env')
 
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
-else:
-    project_root = Path(__file__).resolve().parent.parent
-    fallback_config = project_root / "alembic.ini"
-    if fallback_config.exists():
-        fileConfig(fallback_config)
+project_root = Path(__file__).resolve().parent.parent
+config_path = Path(config.config_file_name) if config.config_file_name else None
+if not config_path or not config_path.is_file():
+    config_path = project_root / "alembic.ini"
+    if config_path.is_file():
+        config.config_file_name = str(config_path)
     else:
-        logger.warning("Alembic config file not found at %s", fallback_config)
+        config_path = None
+
+if config_path and config_path.is_file():
+    fileConfig(config_path)
+else:
+    logger.warning("Alembic config file not found at %s", config_path or "unknown")
 
 try:
     target_metadata = current_app.extensions['migrate'].db.metadata
