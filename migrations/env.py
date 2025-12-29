@@ -2,17 +2,24 @@ from __future__ import with_statement
 
 import logging
 from logging.config import fileConfig
+from pathlib import Path
 
 from alembic import context
 from flask import current_app
 
 config = context.config
 
+logger = logging.getLogger('alembic.env')
+
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
-    logger = logging.getLogger('alembic.env')
 else:
-    logger = logging.getLogger(__name__)
+    project_root = Path(__file__).resolve().parent.parent
+    fallback_config = project_root / "alembic.ini"
+    if fallback_config.exists():
+        fileConfig(fallback_config)
+    else:
+        logger.warning("Alembic config file not found at %s", fallback_config)
 
 try:
     target_metadata = current_app.extensions['migrate'].db.metadata
