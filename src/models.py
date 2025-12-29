@@ -388,6 +388,23 @@ class Notification(db.Model):
         return f'<Notification {self.id} type={self.type}>'
 
 
+class PushSubscription(db.Model):
+    __tablename__ = 'push_subscriptions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    endpoint = db.Column(db.String(500), unique=True, nullable=False)
+    p256dh = db.Column(db.String(255), nullable=False)
+    auth = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
+
+    user = db.relationship('User', backref=db.backref('push_subscriptions', lazy='dynamic', cascade='all, delete-orphan'))
+
+    def __repr__(self):
+        return f'<PushSubscription {self.endpoint[:20]}...>'
+
+
 class Follow(db.Model):
     __tablename__ = 'follows'
 

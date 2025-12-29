@@ -6,7 +6,7 @@ from flask import Flask, render_template, redirect, url_for
 from flask_login import login_required, current_user
 from dotenv import load_dotenv
 from flask_wtf.csrf import CSRFProtect
-from extensions import db, login_manager, cache, limiter, babel
+from extensions import db, login_manager, cache, limiter, babel, migrate
 from flask import request, session
 from flask_babel import gettext as _
 
@@ -185,6 +185,9 @@ def create_app(config: dict | None = None):
     app.config["KEYCLOAK_REALM"] = os.getenv("KEYCLOAK_REALM", "")
     app.config["KEYCLOAK_CLIENT_ID"] = os.getenv("KEYCLOAK_CLIENT_ID", "")
     app.config["KEYCLOAK_CLIENT_SECRET"] = os.getenv("KEYCLOAK_CLIENT_SECRET", "")
+    app.config["VAPID_PUBLIC_KEY"] = os.getenv("VAPID_PUBLIC_KEY")
+    app.config["VAPID_PRIVATE_KEY"] = os.getenv("VAPID_PRIVATE_KEY")
+    app.config["VAPID_SUBJECT"] = os.getenv("VAPID_SUBJECT", "mailto:admin@example.com")
     
     # Cache configuration - disable in development
     redis_url = os.getenv("REDIS_URL", None)
@@ -220,6 +223,7 @@ def create_app(config: dict | None = None):
         cache.init_app(app)
     if limiter:
         limiter.init_app(app)
+    migrate.init_app(app, db)
     
     # Babel i18n configuration
     app.config['BABEL_SUPPORTED_LOCALES'] = ['de', 'en', 'es', 'fr']
@@ -642,7 +646,9 @@ def create_app(config: dict | None = None):
             'cdn_url': f'https://{cdn_domain}' if cdn_domain else '',
             'current_lang': current_lang,
             'supported_languages': app.config['BABEL_SUPPORTED_LOCALES'],
-            'js_translations': js_translations
+            'js_translations': js_translations,
+            'push_public_key': app.config.get("VAPID_PUBLIC_KEY"),
+            'is_authenticated': current_user.is_authenticated
         }
     
     # Language change route

@@ -13,9 +13,21 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Merriweather:wght@400;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
+        const PUSH_PUBLIC_KEY = "{{ push_public_key or '' }}";
+        const IS_AUTHENTICATED = {{ 'true' if is_authenticated else 'false' }};
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js').catch((err) => {
+                navigator.serviceWorker.register('/service-worker.js').then((registration) => {
+                    window.__swRegistration = registration;
+                    navigator.serviceWorker.addEventListener('message', (event) => {
+                        if (event.data && event.data.type === 'badge-update') {
+                            window.updateAppBadges(event.data.unread_count || 0);
+                        }
+                    });
+                    if (Notification.permission === 'granted' && IS_AUTHENTICATED && PUSH_PUBLIC_KEY) {
+                        window.ensurePushSubscription?.();
+                    }
+                }).catch((err) => {
                     console.error('Service worker registration failed:', err);
                 });
             });
@@ -32,6 +44,89 @@
                 }
             }
             document.title = safeCount > 0 ? `(${clamped}) ${window.BASE_PAGE_TITLE}` : window.BASE_PAGE_TITLE;
+        };
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        async function sendSubscriptionToServer(subscription) {
+            await fetch('/api/push/subscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': window.csrfToken,
+                },
+                body: JSON.stringify({ subscription }),
+                credentials: 'same-origin',
+            });
+        }
+
+        async function removeSubscriptionFromServer(endpoint) {
+            if (!endpoint) return;
+            await fetch('/api/push/unsubscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': window.csrfToken,
+                },
+                body: JSON.stringify({ endpoint }),
+                credentials: 'same-origin',
+            });
+        }
+
+        window.ensurePushSubscription = async function() {
+            if (!PUSH_PUBLIC_KEY || !IS_AUTHENTICATED || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+                return;
+            }
+            if (Notification.permission === 'denied') {
+                const registration = await navigator.serviceWorker.ready;
+                const subscription = await registration.pushManager.getSubscription();
+                if (subscription) {
+                    const endpoint = subscription.endpoint;
+                    await subscription.unsubscribe();
+                    await removeSubscriptionFromServer(endpoint);
+                }
+                return;
+            }
+            if (Notification.permission !== 'granted') {
+                return;
+            }
+            try {
+                const registration = await navigator.serviceWorker.ready;
+                let subscription = await registration.pushManager.getSubscription();
+                if (!subscription) {
+                    subscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(PUSH_PUBLIC_KEY),
+                    });
+                }
+                await sendSubscriptionToServer(subscription.toJSON());
+            } catch (err) {
+                console.error('Error subscribing to push notifications', err);
+            }
+        };
+
+        window.requestPushPermission = function() {
+            if (!IS_AUTHENTICATED || !PUSH_PUBLIC_KEY || !('Notification' in window)) {
+                return;
+            }
+            if (Notification.permission === 'default') {
+                Notification.requestPermission().then((permission) => {
+                    if (permission === 'granted') {
+                        window.ensurePushSubscription();
+                    }
+                });
+            } else if (Notification.permission === 'granted') {
+                window.ensurePushSubscription();
+            }
         };
     </script>
     <style>
