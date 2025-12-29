@@ -20,6 +20,19 @@
                 });
             });
         }
+        window.BASE_PAGE_TITLE = document.title;
+        window.updateAppBadges = function(count) {
+            const safeCount = typeof count === 'number' ? count : 0;
+            const clamped = safeCount > 99 ? '99+' : safeCount;
+            if ('setAppBadge' in navigator) {
+                if (safeCount > 0) {
+                    navigator.setAppBadge(safeCount).catch(() => {});
+                } else {
+                    navigator.clearAppBadge().catch(() => {});
+                }
+            }
+            document.title = safeCount > 0 ? `(${clamped}) ${window.BASE_PAGE_TITLE}` : window.BASE_PAGE_TITLE;
+        };
     </script>
     <style>
         @font-face {
@@ -590,6 +603,7 @@
                             } else {
                                 notificationBadge.classList.add('hidden');
                             }
+                            window.updateAppBadges(data.unread_count);
                             
                             // Render notifications
                             if (data.notifications.length === 0) {
@@ -656,6 +670,7 @@
                     fetch('/api/notifications/mark-read', { method: 'POST' })
                         .then(() => {
                             loadNotifications();
+                            window.updateAppBadges(0);
                         });
                 });
             }
