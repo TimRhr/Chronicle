@@ -617,6 +617,7 @@ def create_app(config: dict | None = None):
             'toolbar_placeholder_code': _('code'),
             'toolbar_placeholder_list_item': _('List item'),
             'toolbar_placeholder_link_text': _('Link text'),
+            'toolbar_placeholder_injection': _('HTML/JS Code'),
             'toolbar_code_here': _('code here'),
             'create_tag': _('Create tag'),
             'error_creating': _('Error creating.'),
@@ -661,9 +662,10 @@ def create_app(config: dict | None = None):
         return redirect(referrer or url_for('blog.feed'))
     
     # Add custom Jinja2 filters
-    from content_utils import highlight_search_terms, generate_toc
+    from content_utils import highlight_search_terms, generate_toc, render_markdown
     app.jinja_env.filters['highlight'] = highlight_search_terms
     app.jinja_env.filters['generate_toc'] = generate_toc
+    app.jinja_env.filters['markdown'] = render_markdown
     
     # i18n date formatting filter
     def format_datetime_i18n(dt, include_time=True):

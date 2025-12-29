@@ -65,6 +65,10 @@
                         <button type="button" data-action="link" title="{{ _('Insert link') }}" class="toolbar-btn p-1.5 rounded hover:bg-light-surface dark:hover:bg-dark-surface text-light-text-secondary dark:text-dark-text-secondary">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                         </button>
+                        <div class="w-px h-5 bg-light-border dark:bg-dark-border mx-1"></div>
+                        <button type="button" data-action="injection" title="{{ _('Injection (HTML/JS)') }}" class="toolbar-btn p-1.5 rounded hover:bg-light-surface dark:hover:bg-dark-surface text-light-text-secondary dark:text-dark-text-secondary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        </button>
                     </div>
                     
                     <div id="editor-container">
@@ -382,7 +386,8 @@ document.addEventListener('DOMContentLoaded', function() {
         code: { prefix: '`', suffix: '`', placeholder: window.I18N.toolbar_placeholder_code, isCode: true },
         ul: { prefix: '- ', suffix: '', placeholder: window.I18N.toolbar_placeholder_list_item, lineStart: true },
         ol: { prefix: '1. ', suffix: '', placeholder: window.I18N.toolbar_placeholder_list_item, lineStart: true },
-        link: { prefix: '[', suffix: '](url)', placeholder: window.I18N.toolbar_placeholder_link_text }
+        link: { prefix: '[', suffix: '](url)', placeholder: window.I18N.toolbar_placeholder_link_text },
+        injection: { prefix: '\n```injection\n', suffix: '\n```\n', placeholder: window.I18N.toolbar_placeholder_injection }
     };
     
     document.querySelectorAll('.toolbar-btn').forEach(btn => {
