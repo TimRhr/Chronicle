@@ -288,11 +288,17 @@
             <a href="{{ next_url or url_for('blog.me') }}" class="px-4 py-2 text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary hover:text-brand-teal transition-colors">
                 {{ _('Cancel') }}
             </a>
-            <button type="submit" class="px-6 py-2 text-sm font-medium text-white rounded-md bg-brand-teal hover:bg-brand-blue transition-colors">
+            <button id="post-submit-button" type="submit" data-loading-text="{{ _('Publishing...') }}" class="px-6 py-2 text-sm font-medium text-white rounded-md bg-brand-teal hover:bg-brand-blue transition-colors">
                 {{ _('Publish') }}
             </button>
         </div>
     </form>
+</div>
+<div id="post-submit-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="flex flex-col items-center gap-4 text-white">
+        <div class="h-16 w-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+        <p class="text-sm font-medium tracking-wide">{{ _('Publishing your post...') }}</p>
+    </div>
 </div>
 {% endblock %}
 
@@ -315,6 +321,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const dropZone = document.getElementById('drop-zone');
     const imageInput = document.getElementById('images');
     const imagePreviews = document.getElementById('image-previews');
+    const submitButton = document.getElementById('post-submit-button');
+    const submitOverlay = document.getElementById('post-submit-overlay');
+    const submitOriginalText = submitButton ? submitButton.textContent.trim() : '';
+    let destinationValidator = null;
+    let isSubmitting = false;
 
     function applyDestinationVisibility() {
         if (!destinationProfile || !destinationGroup || !pageField || !groupField || !pageSelect || !groupSelect) return;
@@ -356,28 +367,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
         destinationProfile.addEventListener('change', function() {
             applyDestinationVisibility();
+            if (destinationValidator) destinationValidator();
         });
         destinationGroup.addEventListener('change', function() {
             applyDestinationVisibility();
+            if (destinationValidator) destinationValidator();
         });
 
-        if (postForm) {
-            postForm.addEventListener('submit', function(e) {
-                const groupMode = destinationGroup.checked;
-                const profileMode = destinationProfile.checked;
+        destinationValidator = function() {
+            const groupMode = destinationGroup.checked;
+            const profileMode = destinationProfile.checked;
 
-                if (!groupMode && !profileMode) {
-                    e.preventDefault();
-                    alert(window.I18N.select_destination);
-                    return;
-                }
+            if (!groupMode && !profileMode) {
+                alert(window.I18N.select_destination);
+                return false;
+            }
 
-                if (groupMode && groupSelect && !groupSelect.value) {
-                    e.preventDefault();
-                    alert(window.I18N.select_group);
-                }
-            });
-        }
+            if (groupMode && groupSelect && !groupSelect.value) {
+                alert(window.I18N.select_group);
+                return false;
+            }
+            return true;
+        };
     }
     
     // Markdown toolbar actions
@@ -925,6 +936,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (scheduledAtInput) scheduledAtInput.value = '';
             });
         }
+    }
+
+    function beginSubmitting() {
+        if (isSubmitting) return;
+        isSubmitting = true;
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.classList.add('opacity-70', 'cursor-not-allowed');
+            if (submitButton.dataset.loadingText) {
+                submitButton.textContent = submitButton.dataset.loadingText;
+            }
+        }
+        if (submitOverlay) {
+            submitOverlay.classList.remove('hidden');
+            submitOverlay.classList.add('flex');
+        }
+    }
+
+    if (postForm) {
+        postForm.addEventListener('submit', function(e) {
+            if (isSubmitting) {
+                e.preventDefault();
+                return;
+            }
+            if (typeof destinationValidator === 'function' && !destinationValidator()) {
+                e.preventDefault();
+                return;
+            }
+            beginSubmitting();
+        });
     }
 });
 </script>

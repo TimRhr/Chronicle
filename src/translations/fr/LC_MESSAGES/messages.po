@@ -99,8 +99,16 @@ msgid "Send"
 msgstr "Envoyer"
 
 #: src/app.py:233 src/templates/components/post_interactions.html:73
-msgid "Reply"
-msgstr "Répondre"
+msgid "Save"
+msgstr "Enregistrer"
+
+#: src/templates/me/edit_post.html:265
+msgid "Saving your changes..."
+msgstr "Enregistrement de vos modifications..."
+
+#: src/templates/me/new_post.html:300
+msgid "Publishing your post..."
+msgstr "Publication de votre message..."
 
 #: src/app.py:234 src/templates/components/confirm_modal.html:19
 #: src/templates/components/group_announcement_card.html:59
