@@ -10,9 +10,16 @@ mkdir -p "$BACKUP_DIR"
 
 log() { printf '[update] %s\n' "$*"; }
 
+log "Stopping containers before backup…"
+docker compose down
+
 log "Ensuring data directory ownership (postgres=999, uploads=$USER)…"
 sudo chown -R 999:999 data/postgres || true
 sudo chown -R "$USER":"$USER" data/uploads || true
+
+log "Starting database container for backup…"
+docker compose up -d db
+sleep 5
 
 log "Creating database dump (chronicle-db → backups/db-${TIMESTAMP}.sql)…"
 if docker compose ps db >/dev/null 2>&1; then
