@@ -154,7 +154,7 @@ def reset_password(token: str):
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
-@limiter.limit('20 per hour') if limiter else (lambda f: f)
+@limiter.limit('200 per hour') if limiter else (lambda f: f)
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
