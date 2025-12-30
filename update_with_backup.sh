@@ -52,10 +52,10 @@ else
 fi
 
 STASH_NAME=""
-if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+if ! git diff --quiet || ! git diff --cached --quiet; then
   STASH_NAME="auto-update-${TIMESTAMP}"
   log "Stashing local changes (${STASH_NAME})…"
-  git stash push -u -m "${STASH_NAME}"
+  git stash push -m "${STASH_NAME}"
 fi
 
 log "Fetching & fast-forwarding to origin/main…"
