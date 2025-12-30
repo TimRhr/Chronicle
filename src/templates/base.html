@@ -152,6 +152,8 @@
             };
         }
 
+        window.__buildPushDebugSnapshot = buildPushDebugSnapshot;
+
         window.ensurePushSubscription = async function() {
             if (!PUSH_PUBLIC_KEY || !IS_AUTHENTICATED || !('serviceWorker' in navigator) || !('PushManager' in window)) {
                 return;
@@ -182,10 +184,9 @@
             } catch (err) {
                 try {
                     const snapshot = await buildPushDebugSnapshot(err);
-                    console.groupCollapsed('Push subscribe failed: debug snapshot');
+                    window.__lastPushDebugSnapshot = snapshot;
                     console.error('Error subscribing to push notifications', err);
-                    console.log(snapshot);
-                    console.groupEnd();
+                    console.error('Push subscribe debug snapshot:', snapshot);
                 } catch (e) {
                     console.error('Error subscribing to push notifications', err);
                 }
