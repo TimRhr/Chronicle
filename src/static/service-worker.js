@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chronicle-pwa-v1';
+const CACHE_NAME = 'chronicle-pwa-v2';
 const OFFLINE_URL = '/static/offline.html';
 const PRECACHE_URLS = [
   OFFLINE_URL,
@@ -29,6 +29,21 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+function shouldCache(request) {
+  if (request.method !== 'GET') {
+    return false;
+  }
+  const url = new URL(request.url);
+  const sameOrigin = url.origin === self.location.origin;
+  if (sameOrigin && url.pathname.startsWith('/static/')) {
+    return true;
+  }
+  if (url.pathname === OFFLINE_URL) {
+    return true;
+  }
+  return false;
+}
+
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') {
     return;
@@ -37,28 +52,25 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     (async () => {
       try {
-        if (event.request.mode === 'navigate') {
-          const networkResponse = await fetch(event.request);
+        const networkResponse = await fetch(event.request);
+        if (shouldCache(event.request)) {
           const cache = await caches.open(CACHE_NAME);
           cache.put(event.request, networkResponse.clone());
-          return networkResponse;
         }
-
-        const cached = await caches.match(event.request);
+        return networkResponse;
+      } catch (error) {
+        const cache = await caches.open(CACHE_NAME);
+        const cached = await cache.match(event.request);
         if (cached) {
           return cached;
         }
-
-        const networkResponse = await fetch(event.request);
-        const cache = await caches.open(CACHE_NAME);
-        cache.put(event.request, networkResponse.clone());
-        return networkResponse;
-      } catch (error) {
         if (event.request.mode === 'navigate') {
-          const cachedPage = await caches.match(event.request);
-          return cachedPage || caches.match(OFFLINE_URL);
+          const offline = await cache.match(OFFLINE_URL);
+          if (offline) {
+            return offline;
+          }
         }
-        return caches.match(event.request) || Response.error();
+        throw error;
       }
     })()
   );

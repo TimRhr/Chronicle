@@ -110,6 +110,34 @@ msgstr "Guardando tus cambios..."
 msgid "Publishing your post..."
 msgstr "Publicando tu publicación..."
 
+#: src/templates/me/settings.html:181
+msgid "Notifications"
+msgstr "Notificaciones"
+
+#: src/templates/me/settings.html:183
+msgid "Allow Chronicle to send you push notifications about new activity."
+msgstr "Permite que Chronicle te envíe notificaciones push sobre nueva actividad."
+
+#: src/templates/me/settings.html:186
+msgid "Status: Permission not requested"
+msgstr "Estado: permiso no solicitado"
+
+#: src/templates/me/settings.html:187
+msgid "Status: Permission granted"
+msgstr "Estado: permiso concedido"
+
+#: src/templates/me/settings.html:188
+msgid "Status: Permission denied"
+msgstr "Estado: permiso denegado"
+
+#: src/templates/me/settings.html:189
+msgid "Push notifications are not supported in this browser."
+msgstr "Las notificaciones push no son compatibles con este navegador."
+
+#: src/templates/me/settings.html:193
+msgid "Enable push notifications"
+msgstr "Activar notificaciones push"
+
 #: src/app.py:234 src/templates/components/confirm_modal.html:19
 #: src/templates/components/group_announcement_card.html:59
 #: src/templates/groups/files.html:147 src/templates/me/manage_pages.html:87

@@ -102,12 +102,32 @@ msgstr ""
 msgid "Save"
 msgstr ""
 
-#: src/templates/me/edit_post.html:265
-msgid "Saving your changes..."
+#: src/templates/me/settings.html:181
+msgid "Notifications"
 msgstr ""
 
-#: src/templates/me/new_post.html:300
-msgid "Publishing your post..."
+#: src/templates/me/settings.html:183
+msgid "Allow Chronicle to send you push notifications about new activity."
+msgstr ""
+
+#: src/templates/me/settings.html:186 src/templates/me/settings.html:197
+msgid "Status: Permission not requested"
+msgstr ""
+
+#: src/templates/me/settings.html:187
+msgid "Status: Permission granted"
+msgstr ""
+
+#: src/templates/me/settings.html:188
+msgid "Status: Permission denied"
+msgstr ""
+
+#: src/templates/me/settings.html:189
+msgid "Push notifications are not supported in this browser."
+msgstr ""
+
+#: src/templates/me/settings.html:193
+msgid "Enable push notifications"
 msgstr ""
 
 #: src/app.py:234 src/templates/components/confirm_modal.html:19
