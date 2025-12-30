@@ -134,8 +134,8 @@
                 vapidPublicKey: {
                     present: !!key,
                     length: key.length,
-                    looksUrlSafe,
-                    looksBase64ish,
+                    looksUrlSafe: keyLooksUrlSafe,
+                    looksBase64ish: keyLooksBase64ish,
                 },
                 serviceWorker: {
                     ready: !!swReady,
