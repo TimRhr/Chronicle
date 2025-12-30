@@ -394,8 +394,14 @@ def create_app(config: dict | None = None):
                 db.session.execute(text('ALTER TABLE invites ADD COLUMN expires_at TIMESTAMP'))
             # Backfill missing expires_at
             try:
-                db.session.execute(text("UPDATE invites SET expires_at = DATETIME(created_at, '+7 day') WHERE expires_at IS NULL"))
+                if dialect == 'sqlite':
+                    db.session.execute(text("UPDATE invites SET expires_at = DATETIME(created_at, '+7 day') WHERE expires_at IS NULL"))
+                elif dialect == 'postgresql':
+                    db.session.execute(text("UPDATE invites SET expires_at = created_at + INTERVAL '7 days' WHERE expires_at IS NULL"))
+                else:
+                    db.session.execute(text("UPDATE invites SET expires_at = created_at + INTERVAL '7 days' WHERE expires_at IS NULL"))
             except Exception:
+                db.session.rollback()
                 try:
                     db.session.execute(text("UPDATE invites SET expires_at = created_at + INTERVAL '7 days' WHERE expires_at IS NULL"))
                 except Exception:
