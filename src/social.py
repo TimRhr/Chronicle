@@ -797,7 +797,8 @@ def mark_notifications_read():
     Notification.query.filter_by(user_id=current_user.id, is_read=False)\
         .update({'is_read': True})
     db.session.commit()
-    return jsonify({'success': True})
+    unread_count = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+    return jsonify({'success': True, 'unread_count': unread_count})
 
 
 @social_bp.route('/api/notifications/<int:notification_id>/read', methods=['POST'])
@@ -807,7 +808,8 @@ def mark_notification_read(notification_id):
     notification = Notification.query.filter_by(id=notification_id, user_id=current_user.id).first_or_404()
     notification.is_read = True
     db.session.commit()
-    return jsonify({'success': True})
+    unread_count = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+    return jsonify({'success': True, 'unread_count': unread_count})
 
 
 @social_bp.route('/api/push/subscribe', methods=['POST'])

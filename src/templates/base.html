@@ -806,15 +806,35 @@
                                     link.addEventListener('click', function(e) {
                                         const notificationId = this.dataset.notificationId;
                                         const targetLink = this.dataset.link;
-                                        
-                                        // Mark as read
-                                        fetch(`/api/notifications/${notificationId}/read`, { method: 'POST' });
-                                        
-                                        // Navigate to the link
+
                                         if (targetLink) {
                                             e.preventDefault();
-                                            window.location.href = targetLink;
                                         }
+
+                                        fetch(`/api/notifications/${notificationId}/read`, { method: 'POST' })
+                                            .then(res => res.json())
+                                            .then(data => {
+                                                const unread = typeof data.unread_count === 'number' ? data.unread_count : null;
+                                                if (unread !== null) {
+                                                    if (unread > 0) {
+                                                        notificationBadge.textContent = unread > 9 ? '9+' : unread;
+                                                        notificationBadge.classList.remove('hidden');
+                                                    } else {
+                                                        notificationBadge.classList.add('hidden');
+                                                    }
+                                                    window.updateAppBadges(unread);
+                                                } else {
+                                                    loadNotifications();
+                                                }
+                                            })
+                                            .catch(() => {
+                                                loadNotifications();
+                                            })
+                                            .finally(() => {
+                                                if (targetLink) {
+                                                    window.location.href = targetLink;
+                                                }
+                                            });
                                     });
                                 });
                             }
@@ -843,7 +863,13 @@
                     e.preventDefault();
                     e.stopPropagation();
                     fetch('/api/notifications/mark-read', { method: 'POST' })
-                        .then(() => {
+                        .then(res => res.json())
+                        .then(data => {
+                            const unread = typeof data.unread_count === 'number' ? data.unread_count : 0;
+                            loadNotifications();
+                            window.updateAppBadges(unread);
+                        })
+                        .catch(() => {
                             loadNotifications();
                             window.updateAppBadges(0);
                         });
