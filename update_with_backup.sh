@@ -19,27 +19,37 @@ mkdir -p data/postgres data/uploads
 log "Detecting postgres UID/GID from db image…"
 PG_UID="$(docker compose run --rm db sh -lc 'id -u postgres')"
 PG_GID="$(docker compose run --rm db sh -lc 'id -g postgres')"
+log "Detected postgres UID/GID: ${PG_UID}:${PG_GID}"
 
 log "Ensuring data directory ownership (postgres=${PG_UID}:${PG_GID}, uploads=$USER)…"
 sudo chown -R "${PG_UID}:${PG_GID}" data/postgres || true
 sudo chown -R "$USER":"$USER" data/uploads || true
-
-log "Starting database container for backup…"
-docker compose up -d db
-sleep 5
-
-log "Creating database dump (chronicle-db → backups/db-${TIMESTAMP}.sql)…"
-if docker compose ps db >/dev/null 2>&1; then
-  docker compose exec -T db pg_dump -U chronicle -d chronicle > "$BACKUP_DIR/db-${TIMESTAMP}.sql"
-else
-  log "Warning: db container not running, skipping pg_dump"
-fi
 
 log "Archiving uploads → backups/uploads-${TIMESTAMP}.tar.gz…"
 sudo tar -czf "$BACKUP_DIR/uploads-${TIMESTAMP}.tar.gz" -C data uploads
 
 log "Archiving postgres data → backups/postgres-${TIMESTAMP}.tar.gz…"
 sudo tar -czf "$BACKUP_DIR/postgres-${TIMESTAMP}.tar.gz" -C data postgres
+
+log "Starting database container for SQL dump (optional)…"
+docker compose up -d db
+
+log "Waiting for database to become ready…"
+DB_READY="false"
+for _ in {1..30}; do
+  if docker compose exec -T db pg_isready -U chronicle -d chronicle >/dev/null 2>&1; then
+    DB_READY="true"
+    break
+  fi
+  sleep 1
+done
+
+if [ "$DB_READY" = "true" ]; then
+  log "Creating database dump → backups/db-${TIMESTAMP}.sql…"
+  docker compose exec -T db pg_dump -U chronicle -d chronicle > "$BACKUP_DIR/db-${TIMESTAMP}.sql"
+else
+  log "Warning: database is not ready (container may be restarting). Skipping pg_dump; filesystem backup still available."
+fi
 
 STASH_NAME=""
 if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
