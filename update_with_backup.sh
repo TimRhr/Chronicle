@@ -92,7 +92,7 @@ docker compose up -d
 
 if [ -n "$STASH_NAME" ]; then
   log "Restoring stashed changes (${STASH_NAME})…"
-  git stash pop || log "Warning: stash pop had conflicts, stash kept"
+  git -c status.showUntrackedFiles=no stash pop --quiet || log "Warning: stash pop had conflicts, stash kept"
 fi
 
 log "Update complete. Backups stored in $BACKUP_DIR."
