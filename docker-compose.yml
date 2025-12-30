@@ -29,6 +29,8 @@ services:
       - SMTP_PASSWORD=${SMTP_PASSWORD:-}
       - SMTP_FROM=${SMTP_FROM:-}
       - SMTP_FROM_NAME=${SMTP_FROM_NAME:-}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
     volumes:
       - ./data/uploads:/app/src/static/uploads
       - ./invites.txt:/app/invites.txt
