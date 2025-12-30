@@ -1,4 +1,6 @@
 import os
+import secrets
+import uuid
 from datetime import datetime, timezone
 from datetime import timedelta
 from urllib.parse import quote_plus
@@ -136,6 +138,30 @@ def _build_database_url() -> str:
     return f"{scheme}://{user_q}:{password_q}@{host}:{port}/{name}"
 
 
+def _load_or_create_secret_key(instance_path: str) -> str:
+    existing = os.getenv("SECRET_KEY")
+    if existing:
+        return existing
+    secret_file = os.path.join(instance_path, "flask_secret_key")
+    os.makedirs(instance_path, exist_ok=True)
+    if os.path.exists(secret_file):
+        try:
+            with open(secret_file, "r", encoding="utf-8") as fh:
+                key = fh.read().strip()
+                if key:
+                    return key
+        except Exception:
+            pass
+    secret_key = secrets.token_hex(32)
+    try:
+        with open(secret_file, "w", encoding="utf-8") as fh:
+            fh.write(secret_key)
+    except Exception:
+        # As a fallback we still return the generated key even if writing fails
+        pass
+    return secret_key
+
+
 def create_app(config: dict | None = None):
     """Application factory with optional configuration overrides."""
     app = Flask(__name__, static_folder="static", template_folder="templates")
@@ -151,21 +177,19 @@ def create_app(config: dict | None = None):
         app.config["REMEMBER_COOKIE_HTTPONLY"] = True
         app.config["REMEMBER_COOKIE_SAMESITE"] = "Lax"
 
+    instance_path = os.path.join(os.path.dirname(__file__), "..", "instance")
+    os.makedirs(instance_path, exist_ok=True)
+
     if env == "production":
         app.config["SQLALCHEMY_DATABASE_URI"] = _build_database_url()
     else:
         # Development: SQLite in instance folder
-        instance_path = os.path.join(os.path.dirname(__file__), "..", "instance")
-        os.makedirs(instance_path, exist_ok=True)
         db_path = os.path.join(instance_path, "db.sqlite")
         app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     # SECRET_KEY - required in production
-    secret_key = os.getenv("SECRET_KEY")
-    if env == "production" and not secret_key:
-        raise ValueError("SECRET_KEY environment variable is required in production!")
-    app.config["SECRET_KEY"] = secret_key or "dev-secret-key-change-in-prod"
+    app.config["SECRET_KEY"] = _load_or_create_secret_key(instance_path)
     
     # Registration config
     app.config["REGISTRATION_ENABLED"] = os.getenv("REGISTRATION_ENABLED", "true").lower() == "true"
@@ -251,6 +275,7 @@ def create_app(config: dict | None = None):
         return default_locale
     
     babel.init_app(app, locale_selector=get_locale)
+    register_cli_commands(app)
     
     # Login manager
     login_manager.init_app(app)
@@ -721,6 +746,40 @@ def create_app(config: dict | None = None):
 
     return app
 
+
+def register_cli_commands(app):
+    import click
+
+    translations_dir = os.path.join(os.path.dirname(__file__), 'translations')
+    project_root = os.path.dirname(__file__)
+
+    def _ensure_babel():
+        try:
+            subprocess.check_call(['pybabel', '--version'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except FileNotFoundError as exc:
+            raise click.ClickException(
+                "The 'pybabel' executable was not found. Install Babel via 'pip install Babel'."
+            ) from exc
+
+    def _run_babel_command(args):
+        _ensure_babel()
+        try:
+            subprocess.check_call(args, cwd=project_root)
+        except subprocess.CalledProcessError as exc:
+            raise click.ClickException(f"Babel command failed with exit code {exc.returncode}.") from exc
+
+    @app.cli.group()
+    def translate():
+        """Translation and localization helpers."""
+        pass
+
+    @translate.command()
+    def compile():
+        """Compile all .po files into .mo binaries."""
+        if not os.path.isdir(translations_dir):
+            raise click.ClickException(f"Translations directory not found at {translations_dir}.")
+        _run_babel_command(['pybabel', 'compile', '-d', 'translations', '-f'])
+        click.echo("Translations compiled successfully.")
 
 if __name__ == "__main__":
     app = create_app()

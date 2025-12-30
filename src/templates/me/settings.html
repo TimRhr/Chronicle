@@ -177,6 +177,27 @@
             </div>
         </div>
         
+        <div class="glass-card p-6">
+            <h2 class="font-heading text-lg font-bold mb-2">{{ _('Notifications') }}</h2>
+            <p class="text-sm text-light-text-secondary dark:text-dark-text-secondary mb-4">
+                {{ _('Allow Chronicle to send you push notifications about new activity.') }}
+            </p>
+            <div id="push-permission-container" class="flex flex-col gap-3 sm:flex-row sm:items-center"
+                 data-status-default="{{ _('Status: Permission not requested') }}"
+                 data-status-granted="{{ _('Status: Permission granted') }}"
+                 data-status-denied="{{ _('Status: Permission denied') }}"
+                 data-status-unsupported="{{ _('Push notifications are not supported in this browser.') }}">
+                <button type="button"
+                        id="push-permission-button"
+                        class="px-5 py-2 text-sm font-medium rounded-md text-white bg-brand-teal hover:bg-brand-blue transition-colors">
+                    {{ _('Enable push notifications') }}
+                </button>
+                <span id="push-permission-status" class="text-sm text-light-text-secondary dark:text-dark-text-secondary">
+                    {{ _('Status: Permission not requested') }}
+                </span>
+            </div>
+        </div>
+
         <div class="flex items-center justify-between">
             <a href="{{ url_for('blog.me') }}" class="px-4 py-2 text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary hover:text-brand-teal transition-colors">
                 {{ _('Back') }}
@@ -282,6 +303,56 @@
     document.getElementById('theme_color').addEventListener('input', function(e) {
         document.getElementById('theme_color_value').textContent = e.target.value;
     });
+
+    // Push permission button
+    (function() {
+        const container = document.getElementById('push-permission-container');
+        const button = document.getElementById('push-permission-button');
+        const statusEl = document.getElementById('push-permission-status');
+        if (!container || !button || !statusEl) return;
+
+        const statusTexts = {
+            default: container.dataset.statusDefault,
+            granted: container.dataset.statusGranted,
+            denied: container.dataset.statusDenied,
+            unsupported: container.dataset.statusUnsupported,
+        };
+
+        const isSupported = 'Notification' in window && 'PushManager' in window && 'serviceWorker' in navigator;
+
+        function setStatus(state) {
+            const text = statusTexts[state] || '';
+            statusEl.textContent = text;
+        }
+
+        function refreshState() {
+            if (!isSupported) {
+                setStatus('unsupported');
+                button.disabled = true;
+                button.classList.add('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+            setStatus(Notification.permission);
+            button.disabled = Notification.permission === 'granted';
+            button.classList.toggle('opacity-50', button.disabled);
+            button.classList.toggle('cursor-not-allowed', button.disabled);
+        }
+
+        button.addEventListener('click', () => {
+            if (!isSupported || !window.requestPushPermission) return;
+            window.requestPushPermission();
+            // Permission prompt is async; update after slight delay
+            setTimeout(refreshState, 1000);
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                refreshState();
+            }
+        });
+
+        refreshState();
+    })();
 </script>
 
 <script>

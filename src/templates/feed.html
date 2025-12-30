@@ -1135,23 +1135,27 @@
         .then(data => {
             const container = document.getElementById('trending-tags');
             if (!container) return;
-            if (data.tags.length === 0) {
+            const tags = Array.isArray(data.tags) ? data.tags : [];
+            if (tags.length === 0) {
                 container.innerHTML = `<p class="text-sm text-light-text-muted dark:text-dark-text-muted">${window.I18N.no_trending_tags}</p>`;
                 return;
             }
             
-            container.innerHTML = data.tags.map(tag => `
-                <a href="/feed?tag=${tag.slug}" class="flex items-center justify-between p-2 rounded-lg hover:bg-light-bg dark:hover:bg-dark-bg transition-colors group">
+            container.innerHTML = tags.map(tag => `
+                <a href="/feed?tag=${encodeURIComponent(tag.slug || '')}" class="flex items-center justify-between p-2 rounded-lg hover:bg-light-bg dark:hover:bg-dark-bg transition-colors group">
                     <span class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full" style="background-color: ${tag.color}"></span>
-                        <span class="text-sm font-medium group-hover:text-brand-teal transition-colors">#${tag.name}</span>
+                        <span class="w-2 h-2 rounded-full" style="background-color: ${tag.color || '#4da9a4'}"></span>
+                        <span class="text-sm font-medium group-hover:text-brand-teal transition-colors">#${tag.name || ''}</span>
                     </span>
-                    <span class="text-xs text-light-text-muted dark:text-dark-text-muted">${tag.post_count}</span>
+                    <span class="text-xs text-light-text-muted dark:text-dark-text-muted">${tag.post_count || 0}</span>
                 </a>
             `).join('');
         })
         .catch(() => {
-            document.getElementById('trending-tags').innerHTML = `<p class="text-sm text-light-text-muted dark:text-dark-text-muted">${window.I18N.error_loading}</p>`;
+            const container = document.getElementById('trending-tags');
+            if (container) {
+                container.innerHTML = `<p class="text-sm text-light-text-muted dark:text-dark-text-muted">${window.I18N.error_loading}</p>`;
+            }
         });
     
     // Feed View Toggle (List / Compact / Cards)

@@ -1103,48 +1103,55 @@ def vote_poll(poll_id):
 @social_bp.route('/api/tags/trending')
 @login_required
 def trending_tags():
-    """Get trending tags based on recent post usage."""
+    """Return trending tags, falling back to all-time popular tags if needed."""
     from models import post_tags
     
-    # Get tags used in posts from the last 7 days
-    week_ago = datetime.utcnow() - timedelta(days=7)
-    now = datetime.utcnow()
-    user_group_ids = get_user_group_ids(current_user.id)
+    def query_tags(count_only_recent: bool):
+        now = datetime.utcnow()
+        base_query = db.session.query(
+            Tag.id, Tag.name, Tag.slug, Tag.color,
+            db.func.count(post_tags.c.post_id).label('post_count')
+        ).join(post_tags).join(Post).filter(
+            Post.is_published == True,
+            db.or_(
+                Post.scheduled_at.is_(None),
+                Post.scheduled_at <= now
+            ),
+            group_visibility_filter
+        )
+        if count_only_recent:
+            week_ago = now - timedelta(days=7)
+            base_query = base_query.filter(Post.created_at >= week_ago)
+        return base_query.group_by(Tag.id).all()
     
+    def aggregate(rows):
+        aggregated = {}
+        for tag in rows:
+            normalized = (tag.slug or tag.name or '').strip().lower()
+            if not normalized:
+                continue
+            entry = aggregated.setdefault(normalized, {
+                'name': tag.name,
+                'slug': tag.slug or slugify(tag.name or ''),
+                'color': tag.color,
+                'post_count': 0,
+                '_top_count': 0,
+            })
+            entry['post_count'] += tag.post_count
+            if tag.post_count > entry['_top_count']:
+                entry['_top_count'] = tag.post_count
+                entry['color'] = tag.color
+        return aggregated
+    
+    user_group_ids = get_user_group_ids(current_user.id)
     group_visibility_filter = db.or_(
         Post.group_id.is_(None),
         Post.group_id.in_(user_group_ids) if user_group_ids else False
     )
     
-    raw_trending = db.session.query(
-        Tag.id, Tag.name, Tag.slug, Tag.color,
-        db.func.count(post_tags.c.post_id).label('post_count')
-    ).join(post_tags).join(Post).filter(
-        Post.created_at >= week_ago,
-        Post.is_published == True,
-        db.or_(
-            Post.scheduled_at.is_(None),
-            Post.scheduled_at <= now
-        ),
-        group_visibility_filter
-    ).group_by(Tag.id).all()
-    
-    aggregated = {}
-    for tag in raw_trending:
-        normalized_name = (tag.name or '').strip().lower()
-        if not normalized_name:
-            continue
-        entry = aggregated.setdefault(normalized_name, {
-            'name': tag.name,
-            'slug': slugify(tag.name),
-            'color': tag.color,
-            'post_count': 0,
-            '_top_count': 0,
-        })
-        entry['post_count'] += tag.post_count
-        if tag.post_count > entry['_top_count']:
-            entry['_top_count'] = tag.post_count
-            entry['color'] = tag.color
+    aggregated = aggregate(query_tags(count_only_recent=True))
+    if not aggregated:
+        aggregated = aggregate(query_tags(count_only_recent=False))
     
     top_tags = sorted(aggregated.values(), key=lambda t: t['post_count'], reverse=True)[:7]
     for tag in top_tags:
