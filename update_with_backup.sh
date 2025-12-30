@@ -13,8 +13,15 @@ log() { printf '[update] %s\n' "$*"; }
 log "Stopping containers before backup…"
 docker compose down
 
-log "Ensuring data directory ownership (postgres=999, uploads=$USER)…"
-sudo chown -R 999:999 data/postgres || true
+log "Ensuring data directories exist…"
+mkdir -p data/postgres data/uploads
+
+log "Detecting postgres UID/GID from db image…"
+PG_UID="$(docker compose run --rm db sh -lc 'id -u postgres')"
+PG_GID="$(docker compose run --rm db sh -lc 'id -g postgres')"
+
+log "Ensuring data directory ownership (postgres=${PG_UID}:${PG_GID}, uploads=$USER)…"
+sudo chown -R "${PG_UID}:${PG_GID}" data/postgres || true
 sudo chown -R "$USER":"$USER" data/uploads || true
 
 log "Starting database container for backup…"
@@ -60,7 +67,7 @@ sudo chown -R "$USER":"$USER" data/uploads
 log "Restoring postgres data directory from backup…"
 sudo rm -rf data/postgres
 sudo tar -xzf "$BACKUP_DIR/postgres-${TIMESTAMP}.tar.gz" -C data
-sudo chown -R 999:999 data/postgres
+sudo chown -R "${PG_UID}:${PG_GID}" data/postgres
 
 log "Starting database container…"
 docker compose up -d db
