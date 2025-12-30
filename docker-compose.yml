@@ -40,6 +40,9 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - chronicle_internal
+      - chronicle_external
 
   db:
     image: postgres:16-alpine
@@ -58,6 +61,8 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - chronicle_internal
 
   redis:
     image: redis:7-alpine
@@ -73,8 +78,14 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - chronicle_internal
 
 volumes:
   postgres:
   uploads:
   redis:
+
+networks:
+  chronicle_internal:
+  chronicle_external:
