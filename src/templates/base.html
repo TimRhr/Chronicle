@@ -82,6 +82,76 @@
             });
         }
 
+        async function buildPushDebugSnapshot(err) {
+            let swReady = null;
+            let swRegistration = null;
+            let swController = null;
+            let pushPermissionState = null;
+            let subscriptionEndpoint = null;
+            try {
+                if ('serviceWorker' in navigator) {
+                    swReady = await navigator.serviceWorker.ready;
+                    swRegistration = await navigator.serviceWorker.getRegistration('/service-worker.js');
+                    swController = navigator.serviceWorker.controller ? {
+                        scriptURL: navigator.serviceWorker.controller.scriptURL,
+                        state: navigator.serviceWorker.controller.state,
+                    } : null;
+                }
+            } catch (e) {
+            }
+
+            try {
+                if (navigator.permissions && navigator.permissions.query) {
+                    const status = await navigator.permissions.query({ name: 'push' });
+                    pushPermissionState = status && status.state ? status.state : null;
+                }
+            } catch (e) {
+            }
+
+            try {
+                if (swReady && swReady.pushManager) {
+                    const sub = await swReady.pushManager.getSubscription();
+                    subscriptionEndpoint = sub && sub.endpoint ? sub.endpoint : null;
+                }
+            } catch (e) {
+            }
+
+            const key = (PUSH_PUBLIC_KEY || '').trim();
+            const keyLooksUrlSafe = /^[A-Za-z0-9_-]+$/.test(key);
+            const keyLooksBase64ish = /^[A-Za-z0-9+/=_-]+$/.test(key);
+
+            return {
+                href: window.location.href,
+                isSecureContext: window.isSecureContext,
+                notificationPermission: (window.Notification && Notification.permission) ? Notification.permission : null,
+                pushPermissionState,
+                supports: {
+                    serviceWorker: 'serviceWorker' in navigator,
+                    pushManager: 'PushManager' in window,
+                    notifications: 'Notification' in window,
+                },
+                vapidPublicKey: {
+                    present: !!key,
+                    length: key.length,
+                    looksUrlSafe,
+                    looksBase64ish,
+                },
+                serviceWorker: {
+                    ready: !!swReady,
+                    scope: swReady && swReady.scope ? swReady.scope : null,
+                    activeState: swReady && swReady.active ? swReady.active.state : null,
+                    activeScriptURL: swReady && swReady.active ? swReady.active.scriptURL : null,
+                    getRegistrationScope: swRegistration && swRegistration.scope ? swRegistration.scope : null,
+                    controller: swController,
+                },
+                existingSubscriptionEndpoint: subscriptionEndpoint,
+                error: err ? {
+                    name: err.name,
+                    message: err.message,
+                } : null,
+            };
+        }
+
         window.ensurePushSubscription = async function() {
             if (!PUSH_PUBLIC_KEY || !IS_AUTHENTICATED || !('serviceWorker' in navigator) || !('PushManager' in window)) {
                 return;
@@ -110,7 +180,15 @@
                 }
                 await sendSubscriptionToServer(subscription.toJSON());
             } catch (err) {
-                console.error('Error subscribing to push notifications', err);
+                try {
+                    const snapshot = await buildPushDebugSnapshot(err);
+                    console.groupCollapsed('Push subscribe failed: debug snapshot');
+                    console.error('Error subscribing to push notifications', err);
+                    console.log(snapshot);
+                    console.groupEnd();
+                } catch (e) {
+                    console.error('Error subscribing to push notifications', err);
+                }
             }
         };
 
