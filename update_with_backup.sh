@@ -5,7 +5,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_DIR"
 
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
-BACKUP_DIR="$REPO_DIR/backups"
+BACKUP_DIR="$(cd "$REPO_DIR/.." && pwd)/backups"
 mkdir -p "$BACKUP_DIR"
 
 log() { printf '[update] %s\n' "$*"; }
