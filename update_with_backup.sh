@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+shopt -s nullglob
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_DIR"
@@ -9,6 +10,21 @@ BACKUP_DIR="$(cd "$REPO_DIR/.." && pwd)/backups"
 mkdir -p "$BACKUP_DIR"
 
 log() { printf '[update] %s\n' "$*"; }
+
+cleanup_backups() {
+  local prefix="$1"
+  local extension="$2"
+  local files=("$BACKUP_DIR"/${prefix}-*.${extension})
+
+  if (( ${#files[@]} <= 2 )); then
+    return
+  fi
+
+  IFS=$'\n' files=($(printf '%s\n' "${files[@]}" | sort -r))
+  for file in "${files[@]:2}"; do
+    rm -f "$file"
+  done
+}
 
 log "Stopping containers before backup…"
 docker compose down
@@ -27,9 +43,11 @@ sudo chown -R "$USER":"$USER" data/uploads || true
 
 log "Archiving uploads → backups/uploads-${TIMESTAMP}.tar.gz…"
 sudo tar -czf "$BACKUP_DIR/uploads-${TIMESTAMP}.tar.gz" -C data uploads
+cleanup_backups "uploads" "tar.gz"
 
 log "Archiving postgres data → backups/postgres-${TIMESTAMP}.tar.gz…"
 sudo tar -czf "$BACKUP_DIR/postgres-${TIMESTAMP}.tar.gz" -C data postgres
+cleanup_backups "postgres" "tar.gz"
 
 log "Starting database container for SQL dump (optional)…"
 docker compose up -d db
@@ -47,6 +65,7 @@ done
 if [ "$DB_READY" = "true" ]; then
   log "Creating database dump → backups/db-${TIMESTAMP}.sql…"
   docker compose exec -T db pg_dump -U chronicle -d chronicle > "$BACKUP_DIR/db-${TIMESTAMP}.sql"
+  cleanup_backups "db" "sql"
 else
   log "Warning: database is not ready (container may be restarting). Skipping pg_dump; filesystem backup still available."
 fi
