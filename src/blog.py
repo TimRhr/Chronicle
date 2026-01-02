@@ -345,6 +345,15 @@ def feed_api():
                 } for opt in poll.options.order_by('order')]
             }
         
+        group_payload = None
+        if post.group:
+            group_payload = {
+                'id': post.group.id,
+                'slug': post.group.slug,
+                'name': post.group.name,
+                'color': post.group.color or '#6366f1'
+            }
+
         posts_data.append({
             'id': post.id,
             'content': post.content,
@@ -357,6 +366,7 @@ def feed_api():
             'media': [{'url': m.file_path, 'file_type': m.file_type, 'alt_text': m.alt_text} for m in post.media_items.order_by('order').all()],
             'tags': [{'name': t.name, 'slug': t.slug, 'color': t.color} for t in post.tags],
             'poll': poll_data,
+            'group': group_payload,
             'link_previews': [{
                 'embed_type': lp.embed_type,
                 'embed_id': lp.embed_id,

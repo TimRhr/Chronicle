@@ -48,7 +48,7 @@ A modern social blogging platform built with Flask.
 
 ```bash
 git clone <repository-url>
-cd chronicle-webapp
+cd Chronicle
 ```
 
 ### 2. Configure Environment Variables
